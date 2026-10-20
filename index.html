@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>CyberTrip 4.0: The Akashic Ascension (Global Radio Edition)</title>
 <style>
   :root {
@@ -14,6 +14,7 @@
     --red: #ff0044;
   }
   * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+  html, body { height: 100%; }
   body {
     margin: 0;
     background: #040109;
@@ -21,31 +22,25 @@
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     overflow: hidden;
     touch-action: none;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
   }
+  /* 修正：100vh 在 iOS 會被網址列吃掉，改用 fixed + inset */
   #gameWrapper {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
+    position: fixed;
+    inset: 0;
     overflow: hidden;
   }
   canvas {
     width: 100%;
     height: 100%;
     display: block;
-    transition: filter 0.25s;
+    touch-action: none;
   }
 
-  /* 視覺特效層 */
-  .wave-indica { animation: slowBreath 3.5s infinite ease-in-out; }
-  .bad-trip-fx {
-    filter: invert(0.88) hue-rotate(155deg) contrast(1.55) saturate(1.8) !important;
-  }
+  /* 換關的短暫旋轉衝擊（Bad Trip / Indica 改由 Canvas 內部繪製，不再對整張 canvas 套 CSS filter） */
   .spin-burst {
     animation: spinKick 0.42s cubic-bezier(0.17, 0.89, 0.32, 1.49);
-  }
-  @keyframes slowBreath {
-    0%, 100% { transform: scale(1.02) skew(0deg, 0deg); }
-    50% { transform: scale(1.07) skew(1.2deg, -1.2deg); }
   }
   @keyframes spinKick {
     0% { transform: scale(1.38) rotate(18deg); filter: brightness(2.2); }
@@ -62,7 +57,6 @@
     z-index: 6;
   }
 
-  /* 賽博敘事電台橫幅 */
   #narrativeBanner {
     position: absolute;
     top: 118px;
@@ -88,7 +82,6 @@
     transform: translateX(-50%) translateY(6px);
   }
 
-  /* 選單與彈窗系統 */
   .overlay-screen {
     position: absolute;
     inset: 0;
@@ -99,6 +92,7 @@
     z-index: 30;
     padding: 14px;
     overflow-y: auto;
+    touch-action: pan-y;
   }
   .panel {
     background: rgba(14, 7, 28, 0.96);
@@ -128,12 +122,7 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
-  .top-btn-group {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
+  .top-btn-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .high-score-tag {
     font-size: 0.82rem;
     color: var(--yellow);
@@ -162,11 +151,7 @@
   }
   .btn-lang:hover { background: var(--pink); color: #fff; }
 
-  .grid-2col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
+  .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   @media (max-width: 700px) { .grid-2col { grid-template-columns: 1fr; } }
 
   .step-box {
@@ -176,18 +161,8 @@
     padding: 10px 12px;
     margin-bottom: 10px;
   }
-  .step-title {
-    font-size: 0.86rem;
-    font-weight: bold;
-    color: var(--cyan);
-    margin-bottom: 7px;
-    display: block;
-  }
-  .btn-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
-    gap: 6px;
-  }
+  .step-title { font-size: 0.86rem; font-weight: bold; color: var(--cyan); margin-bottom: 7px; display: block; }
+  .btn-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(95px, 1fr)); gap: 6px; }
   .opt-btn {
     background: #150c28;
     border: 1px solid #3c256e;
@@ -223,10 +198,9 @@
   }
   .launch-btn:hover { transform: scale(1.02); }
 
-  /* 遊戲內頂部 HUD */
   #hud {
     position: absolute;
-    top: 10px;
+    top: calc(10px + env(safe-area-inset-top, 0px));
     left: 14px;
     right: 14px;
     display: none;
@@ -239,7 +213,6 @@
   }
   .hud-card {
     background: rgba(10, 4, 22, 0.84);
-    backdrop-filter: blur(8px);
     border: 1px solid rgba(0, 243, 255, 0.35);
     padding: 9px 14px;
     border-radius: 12px;
@@ -270,31 +243,15 @@
     padding: 8px 15px;
     border-radius: 14px;
   }
-  .stage-badge {
-    font-size: 0.78rem;
-    color: var(--cyan);
-    font-weight: bold;
-  }
-  .mission-text {
-    font-size: 0.94rem;
-    font-weight: bold;
-    color: var(--yellow);
-    margin: 3px 0;
-  }
-  .prog-bar-bg {
-    width: 100%;
-    height: 9px;
-    background: #221538;
-    border-radius: 6px;
-    overflow: hidden;
-  }
+  .stage-badge { font-size: 0.78rem; color: var(--cyan); font-weight: bold; }
+  .mission-text { font-size: 0.94rem; font-weight: bold; color: var(--yellow); margin: 3px 0; }
+  .prog-bar-bg { width: 100%; height: 9px; background: #221538; border-radius: 6px; overflow: hidden; }
   #stageProgBar {
     height: 100%;
     width: 0%;
     background: linear-gradient(90deg, var(--cyan), var(--yellow));
     transition: width 0.2s;
   }
-
   .hud-radio-pill {
     display: flex;
     align-items: center;
@@ -317,15 +274,11 @@
     font-size: 0.72rem;
     transition: 0.15s;
   }
-  .mini-ctrl-btn:hover {
-    background: var(--cyan);
-    color: #000;
-  }
+  .mini-ctrl-btn:hover { background: var(--cyan); color: #000; }
 
-  /* 底部技能充能列 */
   #bottomBar {
     position: absolute;
-    bottom: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
     background: rgba(8, 3, 18, 0.82);
@@ -339,9 +292,6 @@
     align-items: center;
     gap: 10px;
     white-space: nowrap;
-  }
-  @media (max-width: 600px) {
-    #bottomHintText { display: none; }
   }
   .skill-btn {
     background: #2a1842;
@@ -360,9 +310,19 @@
     box-shadow: 0 0 18px rgba(255, 0, 127, 0.8);
     animation: pulseBtn 0.8s infinite alternate;
   }
-  @keyframes pulseBtn {
-    from { transform: scale(1); }
-    to { transform: scale(1.06); }
+  @keyframes pulseBtn { from { transform: scale(1); } to { transform: scale(1.06); } }
+
+  /* 修正：窄螢幕 HUD 換行後會蓋住 Boss 與雷射起點，改為精簡版面 */
+  @media (max-width: 600px) {
+    #bottomHintText { display: none; }
+    #hud { gap: 6px; left: 8px; right: 8px; }
+    .hud-card { padding: 6px 9px; }
+    .bar-bg { width: 118px; }
+    .mission-card { order: -1; flex-basis: 100%; min-width: 0; max-width: none; padding: 5px 10px; }
+    .mission-text { font-size: 0.8rem; }
+    #subInfo, #vibeHint { display: none; }
+    #tripStatus { font-size: 0.8rem !important; }
+    #narrativeBanner { font-size: 0.8rem; padding: 7px 12px; }
   }
 
   .modal-box {
@@ -392,12 +352,10 @@
   <canvas id="gameCanvas"></canvas>
   <div class="flash-overlay" id="flashOverlay"></div>
 
-  <!-- 動態故事電台字幕 -->
   <div id="narrativeBanner">📻 [Subconscious Radio]: Initializing...</div>
 
   <audio id="globalRadioPlayer" preload="none" style="display:none;"></audio>
 
-  <!-- 遊戲內頂部 HUD -->
   <div id="hud">
     <div class="hud-card">
       <div id="tripStatus" style="font-weight:bold; font-size:0.98rem; color:var(--green);">🌈 HAPPY TRIP</div>
@@ -415,13 +373,11 @@
     <div class="hud-card" style="text-align:right;">
       <div style="font-size:1.25rem; font-weight:bold; color:var(--cyan);">SCORE: <span id="scoreVal">0</span></div>
       <div style="font-size:0.9rem; font-weight:bold; color:var(--yellow);" id="comboVal">🔥 COMBO x1</div>
-      
       <div style="margin-top:4px; display:flex; gap:5px; justify-content:flex-end; pointer-events:auto;">
         <button onclick="toggleLanguage()" class="btn-top btn-lang" style="padding:2px 7px; font-size:0.7rem;" id="hudLangBtn">🌐 EN</button>
         <button onclick="togglePause()" id="pauseBtn" class="mini-ctrl-btn">⏸️ [P]</button>
         <button onclick="quitToMenu()" id="labBackBtn" class="mini-ctrl-btn" style="border-color:var(--pink);">🧪 Lab</button>
       </div>
-
       <div class="hud-radio-pill">
         <span id="radioStationLabel">📻 LIVE: Psytrance FM</span>
         <button class="mini-ctrl-btn" onclick="switchRadioChannel()" id="btnNextStation">⏭️</button>
@@ -430,13 +386,11 @@
     </div>
   </div>
 
-  <!-- 底部技能充能列 -->
   <div id="bottomBar">
     <span id="bottomHintText">🖱️ Move to dodge ｜ Graze near 👁️ for MP!</span>
     <button class="skill-btn" id="skillBtn" onclick="triggerSkill()">⚡ Skill Charging (0%)</button>
   </div>
 
-  <!-- 1. 主選單：賽博煉金室 -->
   <div class="overlay-screen" id="mainMenu">
     <div class="panel">
       <div class="title-bar">
@@ -451,7 +405,7 @@
       <div class="grid-2col">
         <div>
           <div class="step-box">
-            <span class="step-title" id="lblStep1">1. 麻草基因 (決定物理慣性與節奏速率)</span>
+            <span class="step-title" id="lblStep1"></span>
             <div class="btn-row">
               <div class="opt-btn active" onclick="setCfg('strain','sativa',this)" id="btnSativa"></div>
               <div class="opt-btn" onclick="setCfg('strain','indica',this)" id="btnIndica"></div>
@@ -460,7 +414,7 @@
           </div>
 
           <div class="step-box">
-            <span class="step-title" id="lblStep2">2. 全球 24/7 電音直播電台 (點火即播・免版權阻擋)</span>
+            <span class="step-title" id="lblStep2"></span>
             <div class="btn-row" style="margin-bottom:7px;">
               <div class="opt-btn active" onclick="setAudioMode('radio',this)" id="btnModeRadio"></div>
               <div class="opt-btn" onclick="setAudioMode('synth',this)" id="btnModeSynth"></div>
@@ -474,7 +428,7 @@
           </div>
 
           <div class="step-box">
-            <span class="step-title" id="lblStep3">3. 難易度與維度深度 (Difficulty)</span>
+            <span class="step-title" id="lblStep3"></span>
             <div class="btn-row">
               <div class="opt-btn" onclick="setCfg('diff','easy',this)" id="btnEasy"></div>
               <div class="opt-btn active" onclick="setCfg('diff','normal',this)" id="btnNormal"></div>
@@ -485,7 +439,7 @@
 
         <div>
           <div class="step-box">
-            <span class="step-title" id="lblStep4">4. 宇宙穿越者 Avatar (流體幾何艦體 + 專屬大招)</span>
+            <span class="step-title" id="lblStep4"></span>
             <div class="btn-row">
               <div class="opt-btn active" onclick="setCfg('avatar','dog',this)" id="btnDog"></div>
               <div class="opt-btn" onclick="setCfg('avatar','cat',this)" id="btnCat"></div>
@@ -495,13 +449,13 @@
           </div>
 
           <div class="step-box">
-            <span class="step-title"><span id="lblStep5">5. THC 精神活性濃度：</span><span id="thcValText" style="color:var(--pink);">65%</span></span>
+            <span class="step-title"><span id="lblStep5"></span><span id="thcValText" style="color:var(--pink);">65%</span></span>
             <input type="range" min="15" max="99" value="65" style="width:100%; accent-color:var(--pink);" oninput="updateThcSlider(this.value)">
             <div id="thcHint" style="font-size:0.76rem; color:var(--green); margin-top:3px;"></div>
           </div>
 
           <div class="step-box">
-            <span class="step-title" id="lblStep6">6. 發酵熟成製程 (Curing - 被動天賦加成)</span>
+            <span class="step-title" id="lblStep6"></span>
             <div class="btn-row">
               <div class="opt-btn" onclick="setCfg('cure','fresh',this)" id="btnFresh"></div>
               <div class="opt-btn active" onclick="setCfg('cure','aged',this)" id="btnAged"></div>
@@ -511,11 +465,10 @@
         </div>
       </div>
 
-      <button class="launch-btn" onclick="startGame()" id="btnLaunch">🔥 點火發酵！展開 5 大維度飛升之旅</button>
+      <button class="launch-btn" onclick="startGame()" id="btnLaunch"></button>
     </div>
   </div>
 
-  <!-- 2. 遊戲指南彈窗 -->
   <div class="overlay-screen" id="guideModal" style="display:none; z-index:40;">
     <div class="modal-box">
       <h2 style="margin-top:0; color:var(--cyan);" id="guideTitle"></h2>
@@ -526,26 +479,31 @@
     </div>
   </div>
 
-  <!-- 3. 結算畫面 -->
   <div class="overlay-screen" id="resultModal" style="display:none; z-index:45;">
     <div class="modal-box" style="text-align:center;">
       <h1 id="resTitle" style="font-size:1.95rem; margin-bottom:6px;"></h1>
       <p id="resDesc" style="color:#ccc; margin-bottom:16px; font-size:0.92rem;"></p>
-      
       <div style="background:#190d30; padding:16px; border-radius:12px; border:1px solid var(--cyan); margin-bottom:16px;">
         <div style="font-size:2.5rem; font-weight:bold; color:var(--yellow);" id="resRank">RANK: SSS</div>
         <div style="font-size:1.35rem; color:var(--cyan); margin:6px 0;"><span id="lblFinalScore">Score: </span><span id="resScore">0</span></div>
         <div style="font-size:0.88rem; color:#ddd;" id="resDetail"></div>
         <div style="margin-top:10px; padding:8px; background:#0d061a; border-radius:8px; font-family:monospace; color:var(--green); font-size:0.85rem;" id="resSeed"></div>
       </div>
-
       <button class="launch-btn" onclick="quitToMenu()" id="btnRetry"></button>
     </div>
   </div>
 </div>
 
 <script>
-// ==================== 1. 雙語字典系統 (i18n Localization) ====================
+// ==================== 0. 共用工具 ====================
+const FRAME_MS = 1000 / 60;           // 所有物理數值以 60fps 為基準，再乘上 dt 校正
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const safeStorage = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+};
+
+// ==================== 1. 雙語字典系統 ====================
 let curLang = 'zh';
 
 const I18N = {
@@ -557,7 +515,7 @@ const I18N = {
     sativa: "🌿 <b>Sativa</b><br><small>極速靈敏・高頻共振</small>",
     indica: "🍂 <b>Indica</b><br><small>液態慢速・波浪呼吸</small>",
     hybrid: "⚡ <b>Hybrid</b><br><small>動靜雙重・量子變速</small>",
-    step2: "2. 全球 24/7 電音直播電台 (點火即播・免版權阻擋)",
+    step2: "2. 全球 24/7 電音直播電台 (連線失敗自動切換合成器)",
     modeRadio: "📻 <b>Global 直播電台</b><br><small>24/7 全球真實電音串流</small>",
     modeSynth: "🎹 <b>內建 Web 合成器</b><br><small>零延遲離線程序電音</small>",
     step3: "3. 難易度與維度深度 (Difficulty)",
@@ -578,7 +536,8 @@ const I18N = {
     hudLab: "🧪 煉金室",
     pause: "⏸️ [P]",
     resume: "▶️ [P]",
-    bottomHint: "🖱️ 滑鼠/手指移動閃避 ｜ 貼近 👁️ 魔眼觸發 <b>GRAZE 擦彈充能</b>",
+    pausedText: "⏸️ 暫停中・按 P 或 ▶️ 繼續",
+    bottomHint: "🖱️ 點擊／拖曳／← → 移動 ｜ 從 👁️ 旁驚險擦過觸發 <b>GRAZE 充能</b>",
     skillCharging: (pct) => `⚡ 技能充能 (${pct}%)`,
     skillReady: "⚡ [空白鍵] 釋放角色大招 (MAX!)",
     happyTrip: "🌈 HAPPY TRIP (高維共振漫遊)",
@@ -586,21 +545,23 @@ const I18N = {
     vibeNormal: "心境穩定 (低於35%進入2.5倍狂暴Bad Trip)",
     vibeDanger: "⚠️ 瀕臨石化！快吃 🌿CBD 或按技能自救！",
     laserWarn: "⚠️ 雷射鎖定預警！快閃開！",
+    synthFallback: "📻 電台連線不穩，已自動切換為內建合成器音樂",
+    supportOrb: "🌟 支援光球 (算 2 顆)",
     guideTitle: "📖 《CyberTrip 4.0》設計師指南與世界觀",
     guideSec1: "<b>🌌 故事背景：2142 阿卡西飛升計畫</b><br>賽博巨企「OmniCorp」用演算法封鎖了全宇宙生物的夢境。你是一隻覺醒的邊境牧羊犬（或折耳貓、外星潛行者），在吸食禁忌的量子草本後進入 <b>Hyper Flying Trip</b>！你必須穿越 5 個物理規則截然不同的時空維度，並擊敗最終心魔 Boss「妄想全視之眼」，解放宇宙意識！",
-    guideSec2: "<b>🌀 5 大維度專屬空間機制</b><br>• <b>Stage 1 (霓虹地平線)：</b> 熟悉流體操控與擦彈充能。<br>• <b>Stage 2 (液態正弦波海)：</b> 掉落物會隨音波<b>左右蛇行漂移</b>！<br>• <b>Stage 3 (六邊形引力矩陣)：</b> 中心產生<b>微幅引力脈衝</b>（已修復卡死 Bug），順暢接球！<br>• <b>Stage 4 (萬花筒鏡像維度)：</b> 啟動<b>雙重鏡像分身</b>幫忙接球！<br>• <b>Stage 5 (阿卡西奇點 Boss 戰)：</b> 閃避<b>紅色死亡雷射預警線</b>，撿取「🌟星辰種子」發射光子砲轟爆魔眼！",
-    guideSec3: "<b>📻 全球 24/7 電音直播電台 & 高手技巧</b><br>• <b>Global Radio 直連：</b> 內建歐美知名地下電音網路電台（Hirschmilch、Nightride FM、SomaFM），點火直接串流播放，右上角 HUD 可隨時切台（⏭️）或靜音！<br>• <b>Graze 擦彈充能：</b> 貼著 👁️ 魔眼邊緣閃過可獲 +500 分並快速充滿 MP 釋放大招！",
+    guideSec2: "<b>🌀 5 大維度專屬空間機制</b><br>• <b>Stage 1 (霓虹地平線)：</b> 熟悉流體操控與擦彈充能。<br>• <b>Stage 2 (液態正弦波海)：</b> 掉落物會隨音波<b>左右蛇行漂移</b>，越靠近你擺幅越小！<br>• <b>Stage 3 (六邊形引力矩陣)：</b> 中心產生<b>微幅引力</b>，掉落物會緩緩向中央聚攏。<br>• <b>Stage 4 (萬花筒鏡像維度)：</b> 啟動<b>雙重鏡像分身</b>幫忙接球！<br>• <b>Stage 5 (阿卡西奇點 Boss 戰)：</b> 閃避<b>紅色死亡雷射預警線</b>，撿取「🌟星辰種子」發射光子砲轟爆魔眼！",
+    guideSec3: "<b>🎮 操控 & 高手技巧</b><br>• <b>移動：</b>滑鼠移動、點一下畫面、手指拖曳或輕點都可以；鍵盤 ← → / A D 也行。<br>• <b>Graze 擦彈：</b>讓 👁️ 魔眼從你身邊驚險通過（不碰到）可獲 +500 分並充能 28% MP！<br>• <b>電台：</b>內建 Hirschmilch、Nightride FM、SomaFM 等 24/7 電音電台，右上角可切台（⏭️）或靜音；連線不穩時會自動切換成內建合成器，遊戲不受影響。",
     guideClose: "✅ 準備就緒，返回煉金室",
     winTitle: "🌌 飛升成功：突破阿卡西奇點！",
     winDesc: "你粉碎了妄想全視之眼，成功將自由夢境帶回全宇宙！",
     loseTitle: "🛋️ COUCH-LOCKED：意識石化出局！",
-    loseDesc: "暗物質魔眼與死亡雷射吞噬了你的心境，你在沙發上徹底石化了...",
+    loseDesc: "暗物質魔眼與死亡雷射吞噬了你的心境。試試木桶醇化或調低 THC 濃度！",
     finalScoreLbl: "最終得分：",
     retryBtn: "🔄 返回煉金室，挑戰更高紀錄",
     stages: [
       { name: "STAGE 1：賽博霓虹地平線", desc: (c,m) => `🎯 階段任務：收集多巴胺光球啟動曲速 (${c}/${m})` },
       { name: "STAGE 2：液態正弦音波海", desc: (c,m) => `🌊 特殊機制：掉落物隨波浪蛇行！收集光球 (${c}/${m})` },
-      { name: "STAGE 3：六邊形引力矩陣", desc: (c,m) => `🧲 特殊機制：抵抗中央引力拉扯！收集能量 (${c}/${m})` },
+      { name: "STAGE 3：六邊形引力矩陣", desc: (c,m) => `🧲 特殊機制：掉落物向中央聚攏！收集能量 (${c}/${m})` },
       { name: "STAGE 4：神聖萬花筒分身", desc: (c,m) => `✨ 特殊機制：雙重鏡像分身助陣！匯聚能量 (${c}/${m})` },
       { name: "FINAL STAGE：妄想全視魔眼", desc: (c,m) => `⚔️ 最終決戰：躲避雷射，撿「🌟」轟擊魔眼 (Boss HP: ${Math.max(0, 100-c)}%)` }
     ],
@@ -649,7 +610,7 @@ const I18N = {
     sativa: "🌿 <b>Sativa</b><br><small>Hyper Speed & Agile</small>",
     indica: "🍂 <b>Indica</b><br><small>Liquid Slow & Wave</small>",
     hybrid: "⚡ <b>Hybrid</b><br><small>Dynamic Shift</small>",
-    step2: "2. 24/7 Global Electronic Radio (Instant Stream, No Copyright Blocks)",
+    step2: "2. 24/7 Global Electronic Radio (Auto-falls back to synth)",
     modeRadio: "📻 <b>Global Live Radio</b><br><small>24/7 Real Underground Streams</small>",
     modeSynth: "🎹 <b>Built-in Web Synth</b><br><small>Offline Procedural Audio</small>",
     step3: "3. Trip Intensity (Difficulty & Length)",
@@ -670,7 +631,8 @@ const I18N = {
     hudLab: "🧪 Lab",
     pause: "⏸️ [P]",
     resume: "▶️ [P]",
-    bottomHint: "🖱️ Move/Touch to Dodge ｜ Graze near 👁️ for <b>Bonus MP!</b>",
+    pausedText: "⏸️ PAUSED · Press P or ▶️ to resume",
+    bottomHint: "🖱️ Tap / Drag / ← → to move ｜ Skim past 👁️ for <b>GRAZE MP</b>",
     skillCharging: (pct) => `⚡ Charging (${pct}%)`,
     skillReady: "⚡ [SPACE] UNLEASH ULTIMATE (MAX!)",
     happyTrip: "🌈 HAPPY TRIP (High-Vibe Cruising)",
@@ -678,10 +640,12 @@ const I18N = {
     vibeNormal: "Vibe Stable (<35% triggers 2.5x Bad Trip Frenzy)",
     vibeDanger: "⚠️ COUCH-LOCK IMMINENT! Grab 🌿CBD or use Skill!",
     laserWarn: "⚠️ LASER LOCK! DODGE NOW!",
+    synthFallback: "📻 Radio unstable — switched to the built-in synth",
+    supportOrb: "🌟 Support Orb (counts x2)",
     guideTitle: "📖 CyberTrip 4.0: Psychonaut's Manual & Lore",
     guideSec1: "<b>🌌 Lore: The 2142 Akashic Ascension</b><br>Mega-corp 'OmniCorp' has locked all sentient dreams behind a neural firewall. As an awakened Border Collie (or Cyber Cat / Psychonaut), you ignite forbidden quantum herbs to enter a <b>Hyper Flying Trip</b>! Blast through 5 distinct dimensional laws and shatter the final boss—The All-Seeing Paranoia Eye!",
-    guideSec2: "<b>🌀 5 Dimensional Stage Mechanics</b><br>• <b>Stage 1 (Neon Horizon):</b> Master fluid movement and Graze charging.<br>• <b>Stage 2 (Sine-Wave Ocean):</b> Falling orbs <b>snake left & right</b> with soundwaves!<br>• <b>Stage 3 (Hex Gravity Matrix):</b> Gentle central gravity pull (Bug fixed!).<br>• <b>Stage 4 (Mandala Mirror):</b> Summon <b>Twin Mirror Clones</b> to catch orbs across lanes!<br>• <b>Stage 5 (The Paranoia Eye Boss):</b> Dodge <b>Red Telegraphed Lasers</b> and grab 🌟 Star Seeds to fire photon cannons!",
-    guideSec3: "<b>📻 24/7 Global Cyber Radio & Pro Tips</b><br>• <b>Live Underground Radio:</b> Streams real 24/7 Psytrance, Cyberpunk Darksynth, Psych Indie, and Acid Techno stations with top-right HUD controls!<br>• <b>Graze to Charge:</b> Skim closely past 👁️ Dark Eyes without touching them for +500 pts and +28% MP!",
+    guideSec2: "<b>🌀 5 Dimensional Stage Mechanics</b><br>• <b>Stage 1 (Neon Horizon):</b> Master fluid movement and Graze charging.<br>• <b>Stage 2 (Sine-Wave Ocean):</b> Falling orbs <b>snake left & right</b> — the swing narrows as they reach you.<br>• <b>Stage 3 (Hex Gravity Matrix):</b> Gentle central gravity pulls drops toward the middle.<br>• <b>Stage 4 (Mandala Mirror):</b> Summon <b>Twin Mirror Clones</b> to catch orbs across lanes!<br>• <b>Stage 5 (The Paranoia Eye Boss):</b> Dodge <b>Red Telegraphed Lasers</b> and grab 🌟 Star Seeds to fire photon cannons!",
+    guideSec3: "<b>🎮 Controls & Pro Tips</b><br>• <b>Move:</b> mouse move, click, finger drag or tap all work; keyboard ← → / A D too.<br>• <b>Graze:</b> let a 👁️ Dark Eye pass close by without touching it for +500 pts and +28% MP!<br>• <b>Radio:</b> real 24/7 Psytrance, Darksynth, Indie and Techno streams with top-right controls. If a stream is unstable the game switches to the built-in synth automatically.",
     guideClose: "✅ Got It, Back to Dispensary Lab",
     winTitle: "🌌 ASCENSION COMPLETE: SINGULARITY BREACHED!",
     winDesc: "You shattered the Paranoia Eye and freed the cosmic consciousness!",
@@ -692,7 +656,7 @@ const I18N = {
     stages: [
       { name: "STAGE 1: Neon Cyber Horizon", desc: (c,m) => `🎯 Mission: Collect Dopamine Orbs (${c}/${m})` },
       { name: "STAGE 2: Liquid Sine-Wave Ocean", desc: (c,m) => `🌊 Mechanic: Slithering Orbs! Collect (${c}/${m})` },
-      { name: "STAGE 3: Hex Gravity Matrix", desc: (c,m) => `🧲 Mechanic: Central Gravity Pull! Collect (${c}/${m})` },
+      { name: "STAGE 3: Hex Gravity Matrix", desc: (c,m) => `🧲 Mechanic: Drops drift to center! Collect (${c}/${m})` },
       { name: "STAGE 4: Sacred Mandala Mirrors", desc: (c,m) => `✨ Mechanic: Twin Mirror Clones Active! (${c}/${m})` },
       { name: "FINAL STAGE: The Paranoia Eye (BOSS)", desc: (c,m) => `⚔️ Boss Fight: Dodge Lasers & Grab 🌟 (Boss HP: ${Math.max(0, 100-c)}%)` }
     ],
@@ -746,22 +710,18 @@ function applyTranslations() {
   document.getElementById('btnSativa').innerHTML = t.sativa;
   document.getElementById('btnIndica').innerHTML = t.indica;
   document.getElementById('btnHybrid').innerHTML = t.hybrid;
-
   document.getElementById('lblStep2').innerText = t.step2;
   document.getElementById('btnModeRadio').innerHTML = t.modeRadio;
   document.getElementById('btnModeSynth').innerHTML = t.modeSynth;
-
   document.getElementById('lblStep3').innerText = t.step3;
   document.getElementById('btnEasy').innerHTML = t.easy;
   document.getElementById('btnNormal').innerHTML = t.normal;
   document.getElementById('btnHard').innerHTML = t.hard;
-
   document.getElementById('lblStep4').innerText = t.step4;
   document.getElementById('btnDog').innerHTML = t.dog;
   document.getElementById('btnCat').innerHTML = t.cat;
   document.getElementById('btnHuman').innerHTML = t.human;
   document.getElementById('btnAlien').innerHTML = t.alien;
-
   document.getElementById('lblStep5').innerText = t.step5;
   document.getElementById('lblStep6').innerText = t.step6;
   document.getElementById('btnFresh').innerHTML = t.fresh;
@@ -783,8 +743,9 @@ function applyTranslations() {
 
   updateThcSlider(cfg.thc);
   if (gs.active) {
-    chargeSkill(0);
-    updateHUD();
+    refreshSkillButton(true);
+    renderHUD();
+    if (gs.paused) drawPausedOverlay();
   }
 }
 
@@ -793,15 +754,10 @@ function toggleLanguage() {
   applyTranslations();
 }
 
-// ==================== 2. 全球電台與串流系統 ====================
+// ==================== 2. 設定與關卡數值 ====================
 const cfg = {
-  strain: 'sativa',
-  audioMode: 'radio',
-  genre: 'psytrance',
-  diff: 'normal',
-  avatar: 'dog',
-  thc: 65,
-  cure: 'aged'
+  strain: 'sativa', audioMode: 'radio', genre: 'psytrance',
+  diff: 'normal', avatar: 'dog', thc: 65, cure: 'aged'
 };
 
 const GLOBAL_RADIOS = {
@@ -834,7 +790,6 @@ function setAudioMode(mode, el) {
   Array.from(el.parentElement.children).forEach(c => c.classList.remove('active'));
   el.classList.add('active');
 }
-
 function setGenre(g, el) {
   cfg.genre = g;
   currentStationIdx = 0;
@@ -850,8 +805,20 @@ const STAGE_META = [
   { id: 5, bgType: "boss_void",  c1: "#ff0033", c2: "#00f3ff", goalType: "boss", baseTarget: 100 }
 ];
 
+// 難度曲線：每關的速度倍率、生成率、魔眼比例倍率、接球半徑、接球吸附強度、保底光球間隔
+const STAGE_TUNING = [
+  { speed: 0.70, spawn: 0.060, bad: 0.40, catchR: 60, assist: 0.10, pityMs: 2600 },
+  { speed: 0.82, spawn: 0.066, bad: 0.70, catchR: 56, assist: 0.07, pityMs: 3200 },
+  { speed: 0.92, spawn: 0.072, bad: 0.90, catchR: 52, assist: 0.05, pityMs: 3800 },
+  { speed: 1.00, spawn: 0.078, bad: 1.00, catchR: 50, assist: 0.04, pityMs: 4200 },
+  { speed: 0.95, spawn: 0.070, bad: 0.85, catchR: 54, assist: 0.06, pityMs: 3800 }
+];
+const HIT_R_BAD = 32;      // 受傷判定比視覺小（彈幕遊戲慣例），讓閃避有餘裕
+const GRAZE_R = 88;        // 擦彈範圍
+const STALL_MS = 18000;    // 18 秒沒進度 → 補一顆金色支援光球
+
 const AVATAR_ICONS = { dog: "🐶", cat: "🐱", human: "🧑‍🚀", alien: "👽" };
-let savedHighScore = parseInt(localStorage.getItem('cybertrip_best') || '0');
+let savedHighScore = parseInt(safeStorage.get('cybertrip_best', '0'), 10) || 0;
 
 function setCfg(key, val, el) {
   cfg[key] = val;
@@ -860,7 +827,7 @@ function setCfg(key, val, el) {
 }
 
 function updateThcSlider(val) {
-  cfg.thc = parseInt(val);
+  cfg.thc = parseInt(val, 10);
   document.getElementById('thcValText').innerText = `${val}%`;
   const mult = (1 + (val / 45)).toFixed(1);
   const hint = document.getElementById('thcHint');
@@ -879,121 +846,201 @@ function toggleGuide(show) {
   document.getElementById('guideModal').style.display = show ? 'flex' : 'none';
 }
 
+let narrativeTimer = null;
 function showNarrative(text) {
   const banner = document.getElementById('narrativeBanner');
   banner.innerText = text;
   banner.classList.add('show');
-  setTimeout(() => { banner.classList.remove('show'); }, 4500);
+  clearTimeout(narrativeTimer);   // 修正：舊計時器不會提早把新字幕收掉
+  narrativeTimer = setTimeout(() => banner.classList.remove('show'), 4500);
 }
 
-// ==================== 3. 音效與全球電台引擎 ====================
-let audioCtx, masterGain, delayNode, musicInterval;
-let arpStep = 0;
-let beatPulse = 0;
+// ==================== 3. 音效與電台引擎（完全非同步，絕不影響渲染迴圈） ====================
+let audioCtx = null, masterGain = null, delayNode = null;
+let synthInterval = null, beatInterval = null;
+let arpStep = 0, beatPulse = 0;
+let audioSession = 0;        // 每次開局/離開 +1，讓過期的非同步回呼自動作廢
+let radioAttempt = 0;        // 每次嘗試連線 +1，避免同一次失敗被重複計算
+let radioPending = false, radioFailCount = 0, radioWatchdog = null, usingSynthFallback = false;
+const radioEl = document.getElementById('globalRadioPlayer');
+
+function setRadioLabel(txt) { document.getElementById('radioStationLabel').textContent = txt; }
+function currentStation() { const s = GLOBAL_RADIOS[cfg.genre]; return s[currentStationIdx % s.length]; }
+function clearRadioWatchdog() { if (radioWatchdog) { clearTimeout(radioWatchdog); radioWatchdog = null; } }
+function armRadioWatchdog(ms) {
+  clearRadioWatchdog();
+  const session = audioSession, attempt = radioAttempt;
+  radioWatchdog = setTimeout(() => handleRadioFailure(session, 'timeout', attempt), ms);
+}
+
+radioEl.addEventListener('playing', () => {
+  if (!gs.active || cfg.audioMode !== 'radio' || usingSynthFallback) return;
+  clearRadioWatchdog();
+  radioPending = false;
+  radioFailCount = 0;
+  setRadioLabel(`📻 LIVE: ${currentStation().name}`);
+});
+radioEl.addEventListener('waiting', () => {
+  // 播放中途緩衝：10 秒內沒恢復就換台
+  if (gs.active && !gs.paused && !radioPending && cfg.audioMode === 'radio' && !usingSynthFallback && radioEl.getAttribute('src')) {
+    armRadioWatchdog(10000);
+  }
+});
+radioEl.addEventListener('error', () => {
+  if (!radioEl.getAttribute('src')) return;
+  handleRadioFailure(audioSession, 'error', radioAttempt);
+});
 
 function initAudioSystem() {
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  masterGain = audioCtx.createGain();
-  masterGain.gain.value = isAudioMuted ? 0 : 0.68;
+  stopAllAudio();
+  const session = audioSession;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    audioCtx = AC ? new AC() : null;
+  } catch (e) { audioCtx = null; }
 
-  delayNode = audioCtx.createDelay();
-  delayNode.delayTime.value = 0.25;
-  const fb = audioCtx.createGain();
-  fb.gain.value = 0.35;
-  delayNode.connect(fb);
-  fb.connect(delayNode);
-  delayNode.connect(masterGain);
-  masterGain.connect(audioCtx.destination);
+  if (audioCtx) {
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = isAudioMuted ? 0 : 0.68;
+    delayNode = audioCtx.createDelay();
+    delayNode.delayTime.value = 0.25;
+    const fb = audioCtx.createGain();
+    fb.gain.value = 0.35;
+    delayNode.connect(fb); fb.connect(delayNode);
+    delayNode.connect(masterGain);
+    masterGain.connect(audioCtx.destination);
+    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+  }
 
+  radioFailCount = 0;
+  usingSynthFallback = false;
   if (cfg.audioMode === 'radio') {
-    playGlobalRadioStream();
+    startVisualBeatClock();
+    playGlobalRadioStream(session);
   } else {
-    document.getElementById('radioStationLabel').innerText = `🎹 SYNTH: ${cfg.genre.toUpperCase()}`;
-    startWebSynthLoop();
+    startSynth(session);
   }
 }
 
-function playGlobalRadioStream() {
-  const radioEl = document.getElementById('globalRadioPlayer');
-  const stations = GLOBAL_RADIOS[cfg.genre];
-  const st = stations[currentStationIdx % stations.length];
-
-  document.getElementById('radioStationLabel').innerText = `📻 LIVE: ${st.name}`;
+function playGlobalRadioStream(session) {
+  if (session !== audioSession) return;
+  usingSynthFallback = false;
+  const st = currentStation();
+  const attempt = ++radioAttempt;
+  setRadioLabel(`📻 ⏳ ${st.name}`);
+  radioPending = true;
+  radioEl.muted = isAudioMuted;            // iOS 的 volume 是唯讀，靜音一律用 muted
+  try { radioEl.volume = 0.85; } catch (e) {}
   radioEl.src = st.url;
-  radioEl.volume = isAudioMuted ? 0 : 0.85;
+  armRadioWatchdog(7000);                  // 7 秒連不上就換下一台
 
-  if (musicInterval) clearInterval(musicInterval);
-  startVisualBeatClock();
+  let p;
+  try { p = radioEl.play(); } catch (e) { handleRadioFailure(session, 'play-throw', attempt); return; }
+  if (p && typeof p.catch === 'function') {
+    p.catch(err => {
+      if (err && err.name === 'AbortError') return;   // 被新的 src 取代，屬正常
+      handleRadioFailure(session, err ? err.name : 'play-rejected', attempt);
+    });
+  }
+}
 
-  radioEl.play().catch(err => {
-    console.warn("Radio stream fallback triggered:", err);
-    if (currentStationIdx + 1 < stations.length) {
-      currentStationIdx++;
-      playGlobalRadioStream();
-    } else {
-      document.getElementById('radioStationLabel').innerText = `🎹 SYNTH: ${cfg.genre.toUpperCase()}`;
-      if (musicInterval) clearInterval(musicInterval);
-      startWebSynthLoop();
-    }
-  });
+function handleRadioFailure(session, reason, attempt) {
+  if (session !== audioSession || attempt !== radioAttempt) return;
+  if (!gs.active || cfg.audioMode !== 'radio' || usingSynthFallback) return;
+  if (gs.paused) return;                   // 暫停中不換台，恢復時會重新嘗試
+  radioAttempt++;
+  clearRadioWatchdog();
+  console.warn('[CyberTrip] radio failed:', currentStation().name, reason);
+  const stations = GLOBAL_RADIOS[cfg.genre];
+  radioFailCount++;
+  if (radioFailCount < stations.length) {
+    currentStationIdx = (currentStationIdx + 1) % stations.length;
+    playGlobalRadioStream(session);
+  } else {
+    fallbackToSynth(session);
+  }
+}
+
+function fallbackToSynth(session) {
+  if (session !== audioSession) return;
+  usingSynthFallback = true;
+  radioPending = false;
+  clearRadioWatchdog();
+  releaseRadioElement();
+  showNarrative(I18N[curLang].synthFallback);
+  startSynth(session);
+}
+
+function releaseRadioElement() {
+  try { radioEl.pause(); } catch (e) {}
+  // 修正：src = "" 會被解析成頁面網址並觸發 error，改用 removeAttribute
+  if (radioEl.getAttribute('src')) {
+    radioEl.removeAttribute('src');
+    try { radioEl.load(); } catch (e) {}
+  }
+}
+
+function startSynth(session) {
+  if (session !== audioSession) return;
+  if (beatInterval) { clearInterval(beatInterval); beatInterval = null; }
+  setRadioLabel(`🎹 SYNTH: ${cfg.genre.toUpperCase()}`);
+  startWebSynthLoop();
 }
 
 function switchRadioChannel() {
-  if (!gs.active) return;
+  if (!gs.active || gs.paused) return;
   if (cfg.audioMode === 'radio') {
-    const stations = GLOBAL_RADIOS[cfg.genre];
-    currentStationIdx = (currentStationIdx + 1) % stations.length;
-    playGlobalRadioStream();
+    radioAttempt++;
+    clearRadioWatchdog();
+    if (synthInterval) { clearInterval(synthInterval); synthInterval = null; }
+    if (!beatInterval) startVisualBeatClock();
+    radioFailCount = 0;
+    currentStationIdx = (currentStationIdx + 1) % GLOBAL_RADIOS[cfg.genre].length;
+    playGlobalRadioStream(audioSession);
   } else {
     const genres = ['psytrance', 'cyberpunk', 'indie', 'techno'];
     cfg.genre = genres[(genres.indexOf(cfg.genre) + 1) % genres.length];
-    document.getElementById('radioStationLabel').innerText = `🎹 SYNTH: ${cfg.genre.toUpperCase()}`;
-    updateHUD();
+    startSynth(audioSession);
+    markHUD();
   }
 }
 
 function toggleMuteAudio() {
   isAudioMuted = !isAudioMuted;
-  const radioEl = document.getElementById('globalRadioPlayer');
-  radioEl.volume = isAudioMuted ? 0 : 0.85;
+  radioEl.muted = isAudioMuted;
   if (masterGain) masterGain.gain.value = isAudioMuted ? 0 : 0.68;
   document.getElementById('btnMuteAudio').innerText = isAudioMuted ? "🔇" : "🔊";
 }
 
-function startVisualBeatClock() {
-  let bpm = cfg.genre === 'psytrance' ? 145 : (cfg.genre === 'cyberpunk' ? 116 : (cfg.genre === 'indie' ? 112 : 136));
+function genreBpm(base) {
+  let bpm = base;
   if (cfg.strain === 'indica') bpm *= 0.85;
   if (cfg.strain === 'sativa') bpm *= 1.05;
-  const beatMs = (60 / bpm) * 1000;
-  musicInterval = setInterval(() => {
-    if (gs.active && !gs.paused) beatPulse = 1.0;
-  }, beatMs);
+  return bpm;
+}
+
+function startVisualBeatClock() {
+  if (beatInterval) clearInterval(beatInterval);
+  const base = cfg.genre === 'psytrance' ? 145 : (cfg.genre === 'cyberpunk' ? 116 : (cfg.genre === 'indie' ? 112 : 136));
+  const beatMs = (60 / genreBpm(base)) * 1000;
+  beatInterval = setInterval(() => { if (gs.active && !gs.paused) beatPulse = 1.0; }, beatMs);
 }
 
 function startWebSynthLoop() {
-  let bpm = cfg.genre === 'psytrance' ? 145 : (cfg.genre === 'cyberpunk' ? 116 : (cfg.genre === 'indie' ? 110 : 138));
-  if (cfg.strain === 'indica') bpm *= 0.84;
-  if (cfg.strain === 'sativa') bpm *= 1.06;
-  const stepSec = (60 / bpm) / 4;
+  if (synthInterval) clearInterval(synthInterval);
+  const base = cfg.genre === 'psytrance' ? 145 : (cfg.genre === 'cyberpunk' ? 116 : (cfg.genre === 'indie' ? 110 : 138));
+  const stepSec = (60 / genreBpm(base)) / 4;
 
-  musicInterval = setInterval(() => {
-    if (!gs.active || gs.paused || !audioCtx) return;
+  synthInterval = setInterval(() => {
+    if (!gs.active || gs.paused || !audioCtx || !masterGain) return;
     const now = audioCtx.currentTime;
     const s = arpStep % 16;
 
-    if (s % 4 === 0) {
-      playKick(now, cfg.genre === 'cyberpunk' ? 115 : 155);
-      beatPulse = 1.0;
-    }
-    if (cfg.genre === 'psytrance' && s % 4 !== 0) {
-      playBass(now, gs.badTrip ? 51.9 : 55, 0.08, 'sawtooth', 800);
-    } else if (cfg.genre === 'cyberpunk' && s % 2 === 0) {
-      playBass(now, s < 8 ? 43.65 : 51.91, 0.16, 'sawtooth', 950);
-    } else if (cfg.genre === 'techno' && (s === 2 || s === 6 || s === 10 || s === 14)) {
-      playBass(now, 65.4, 0.12, 'sawtooth', 1600);
-    } else if (cfg.genre === 'indie' && (s === 0 || s === 6 || s === 12)) {
-      playBass(now, 65.4, 0.28, 'triangle', 550);
-    }
+    if (s % 4 === 0) { playKick(now, cfg.genre === 'cyberpunk' ? 115 : 155); beatPulse = 1.0; }
+    if (cfg.genre === 'psytrance' && s % 4 !== 0) playBass(now, gs.badTrip ? 51.9 : 55, 0.08, 'sawtooth', 800);
+    else if (cfg.genre === 'cyberpunk' && s % 2 === 0) playBass(now, s < 8 ? 43.65 : 51.91, 0.16, 'sawtooth', 950);
+    else if (cfg.genre === 'techno' && (s === 2 || s === 6 || s === 10 || s === 14)) playBass(now, 65.4, 0.12, 'sawtooth', 1600);
+    else if (cfg.genre === 'indie' && (s === 0 || s === 6 || s === 12)) playBass(now, 65.4, 0.28, 'triangle', 550);
 
     const scale = gs.badTrip ? [207.65, 220, 277.18, 311.13, 415.3] : [220, 261.63, 329.63, 392.00, 440, 523.25, 659.25];
     if (s % 2 === 0 || cfg.genre === 'psytrance') {
@@ -1005,22 +1052,30 @@ function startWebSynthLoop() {
 }
 
 function stopAllAudio() {
-  if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
-  const radioEl = document.getElementById('globalRadioPlayer');
-  radioEl.pause(); radioEl.src = "";
+  audioSession++;
+  radioAttempt++;
+  clearRadioWatchdog();
+  if (synthInterval) { clearInterval(synthInterval); synthInterval = null; }
+  if (beatInterval) { clearInterval(beatInterval); beatInterval = null; }
+  radioPending = false;
+  usingSynthFallback = false;
+  releaseRadioElement();
   if (audioCtx) {
-    try { audioCtx.close(); } catch(e) {}
-    audioCtx = null;
+    const c = audioCtx;
+    try { const p = c.close(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
   }
+  audioCtx = null; masterGain = null; delayNode = null;
 }
 
 function playKick(t, f) {
+  if (!audioCtx || !masterGain) return;
   const o = audioCtx.createOscillator(), g = audioCtx.createGain();
   o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(30, t + 0.13);
   g.gain.setValueAtTime(0.55, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
   o.connect(g); g.connect(masterGain); o.start(t); o.stop(t + 0.16);
 }
 function playBass(t, f, dur, type, cut) {
+  if (!audioCtx || !masterGain) return;
   const o = audioCtx.createOscillator(), fl = audioCtx.createBiquadFilter(), g = audioCtx.createGain();
   o.type = type; o.frequency.setValueAtTime(f, t);
   fl.type = 'lowpass'; fl.frequency.setValueAtTime(cut, t); fl.frequency.exponentialRampToValueAtTime(110, t + dur);
@@ -1028,13 +1083,22 @@ function playBass(t, f, dur, type, cut) {
   o.connect(fl); fl.connect(g); g.connect(masterGain); o.start(t); o.stop(t + dur + 0.02);
 }
 function playStereoNote(t, f, dur, type, panVal) {
-  const o = audioCtx.createOscillator(), p = audioCtx.createStereoPanner(), g = audioCtx.createGain();
-  o.type = type; o.frequency.setValueAtTime(f, t); p.pan.setValueAtTime(panVal, t);
+  if (!audioCtx || !masterGain) return;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t);
   g.gain.setValueAtTime(0.07, t); g.gain.exponentialRampToValueAtTime(0.004, t + dur);
-  o.connect(p); p.connect(g); g.connect(masterGain); g.connect(delayNode); o.start(t); o.stop(t + dur + 0.02);
+  if (audioCtx.createStereoPanner) {
+    const p = audioCtx.createStereoPanner();
+    p.pan.setValueAtTime(panVal, t);
+    o.connect(p); p.connect(g);
+  } else {
+    o.connect(g);
+  }
+  g.connect(masterGain); if (delayNode) g.connect(delayNode);
+  o.start(t); o.stop(t + dur + 0.02);
 }
 function playSFX(f1, f2, dur, type = 'sine') {
-  if (!audioCtx || gs.paused || isAudioMuted) return;
+  if (!audioCtx || !masterGain || gs.paused || isAudioMuted) return;
   const t = audioCtx.currentTime;
   const o = audioCtx.createOscillator(), g = audioCtx.createGain();
   o.type = type; o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(f2, t + dur);
@@ -1042,52 +1106,161 @@ function playSFX(f1, f2, dur, type = 'sine') {
   o.connect(g); g.connect(masterGain); o.start(t); o.stop(t + dur);
 }
 
-// ==================== 4. 遊戲核心迴圈與修復監聽 ====================
+// ==================== 4. 遊戲狀態、輸入與流程 ====================
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-let width, height;
+let width = window.innerWidth, height = window.innerHeight;
+const layout = { bossY: 135, playerY: window.innerHeight - 105 };
+
+const gs = {
+  active: false, paused: false, now: 0,
+  score: 0, vibe: 90, badTrip: false,
+  combo: 1, maxCombo: 1, grazeCount: 0, skillCharge: 100,
+  stageIdx: 0, stageProgress: 0, stageTarget: 7,
+  pendingStage: -1, pendingVictory: false,
+  invincibleUntil: 0, hurtUntil: 0, dashUntil: 0, screenShake: 0,
+  lastGoodAt: 0, lastStarAt: 0, lastProgressAt: 0,
+  playerX: window.innerWidth / 2, targetX: window.innerWidth / 2,
+  trail: [], particles: [], items: [], floatingTexts: [], ripples: [],
+  bossX: window.innerWidth / 2, lasers: [],
+  bossLaser: { state: 'idle', x: 0, since: 0, hitApplied: false }
+};
+const keys = { left: false, right: false };
+
+// --- 繪圖快取：emoji 與光暈只算一次，之後每幀只做 drawImage ---
+const spriteCache = {};
+function getEmojiSprite(emoji, size, glow) {
+  const key = `${emoji}|${size}|${glow}`;
+  if (spriteCache[key]) return spriteCache[key];
+  const pad = Math.ceil(size * 0.6);
+  const dim = Math.ceil(size * 1.3) + pad * 2;
+  const c = document.createElement('canvas');
+  c.width = c.height = dim;
+  const g = c.getContext('2d');
+  g.font = `${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';    // 修正：視覺中心與碰撞圓心對齊
+  if (glow) { g.shadowColor = glow; g.shadowBlur = size * 0.5; }
+  g.fillText(emoji, dim / 2, dim / 2);
+  spriteCache[key] = c;
+  return c;
+}
+function drawSprite(spr, x, y) { ctx.drawImage(spr, x - spr.width / 2, y - spr.height / 2); }
+
+let badTripVignette = null;
+function buildVignette() {
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, width); c.height = Math.max(1, height);
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(width / 2, height / 2, Math.min(width, height) * 0.18, width / 2, height / 2, Math.max(width, height) * 0.75);
+  grad.addColorStop(0, 'rgba(255,0,68,0)');
+  grad.addColorStop(0.6, 'rgba(138,43,226,0.18)');
+  grad.addColorStop(1, 'rgba(255,0,68,0.6)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, width, height);
+  badTripVignette = c;
+}
+
+function computeLayout() {
+  const hud = document.getElementById('hud');
+  const bar = document.getElementById('bottomBar');
+  const banner = document.getElementById('narrativeBanner');
+  let hudBottom = 0;
+  if (hud.style.display === 'flex') hudBottom = hud.getBoundingClientRect().bottom;
+  layout.bossY = Math.min(height * 0.42, Math.max(135, hudBottom + 70));
+  let py = height - 105;
+  if (bar.style.display === 'flex') py = Math.min(py, bar.getBoundingClientRect().top - 62);
+  layout.playerY = Math.max(height * 0.55, py);
+  banner.style.top = hudBottom > 0 ? `${Math.round(hudBottom + 8)}px` : '118px';
+}
+
 function resize() {
   width = canvas.width = window.innerWidth;
   height = canvas.height = window.innerHeight;
+  buildVignette();
+  computeLayout();
+  gs.playerX = clamp(gs.playerX, 40, Math.max(40, width - 40));
+  gs.targetX = clamp(gs.targetX, 40, Math.max(40, width - 40));
+  if (gs.active && gs.paused) { drawFrameStatic(); drawPausedOverlay(); }
 }
-window.addEventListener('resize', resize);
-resize();
 
-const gs = {
-  active: false, paused: false, score: 0, vibe: 90, badTrip: false,
-  combo: 1, maxCombo: 1, grazeCount: 0, skillCharge: 100,
-  stageIdx: 0, stageProgress: 0, stageTarget: 7, invincibleUntil: 0, screenShake: 0,
-  playerX: window.innerWidth / 2, targetX: window.innerWidth / 2,
-  trail: [], particles: [], items: [], floatingTexts: [],
-  bossX: window.innerWidth / 2, lasers: [],
-  bossLaser: { state: 'idle', x: 0, timer: 0 }
-};
+// --- 輸入：Pointer Events 同時支援滑鼠點擊/移動、觸控輕點/拖曳 ---
+function pointerToCanvasX(e) {
+  const r = canvas.getBoundingClientRect();
+  return (e.clientX - r.left) * (width / (r.width || width));
+}
+canvas.addEventListener('pointerdown', e => {
+  if (!gs.active || gs.paused) return;
+  const x = pointerToCanvasX(e);
+  gs.targetX = x;
+  gs.dashUntil = gs.now + 220;   // 點擊 → 短暫衝刺飛向點擊處
+  gs.ripples.push({ x, y: Math.min(layout.playerY, (e.clientY - canvas.getBoundingClientRect().top)), r: 8, alpha: 0.9 });
+  try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+});
+canvas.addEventListener('pointermove', e => {
+  if (!gs.active || gs.paused) return;
+  gs.targetX = pointerToCanvasX(e);
+});
+canvas.addEventListener('contextmenu', e => e.preventDefault());
 
-window.addEventListener('mousemove', e => { if (!gs.paused) gs.targetX = e.clientX; });
-window.addEventListener('touchmove', e => {
-  if (!gs.paused && e.touches.length > 0) gs.targetX = e.touches[0].clientX;
-}, { passive: true });
-
-// 關鍵修復：攔截空白鍵預設滾動行為，確保大招 100% 成功觸發！
 window.addEventListener('keydown', e => {
-  if (e.code === 'Space') {
+  if (e.code === 'Space' && gs.active) {
     e.preventDefault();
-    if (gs.active && !gs.paused) triggerSkill();
+    if (!gs.paused) triggerSkill();
   }
   if (e.code === 'KeyP' && gs.active) togglePause();
+  if (e.code === 'ArrowLeft' || e.code === 'KeyA') { keys.left = true; if (gs.active) e.preventDefault(); }
+  if (e.code === 'ArrowRight' || e.code === 'KeyD') { keys.right = true; if (gs.active) e.preventDefault(); }
+});
+window.addEventListener('keyup', e => {
+  if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
+  if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
+});
+window.addEventListener('blur', () => { keys.left = keys.right = false; });
+
+// 切換分頁 / 鎖屏時自動暫停，回來不會突然被打
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && gs.active && !gs.paused) togglePause();
 });
 
+// --- 遊戲迴圈：單一實例、delta-time、單幀出錯不會中斷 ---
+let rafId = null, lastFrameT = 0;
+function startLoop() {
+  if (rafId) cancelAnimationFrame(rafId);
+  lastFrameT = performance.now();
+  rafId = requestAnimationFrame(renderLoop);
+}
+function stopLoop() {
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = null;
+}
+function renderLoop(t) {
+  rafId = null;
+  if (!gs.active || gs.paused) return;
+  let dt = (t - lastFrameT) / FRAME_MS;
+  lastFrameT = t;
+  if (!(dt > 0)) dt = 1;
+  dt = Math.min(dt, 3);   // 卡頓或切回分頁時不讓物件瞬移
+  try {
+    stepAndDraw(dt);
+  } catch (err) {
+    console.error('[CyberTrip] frame error (loop continues):', err);
+  }
+  flushHUD();
+  if (gs.active && !gs.paused) rafId = requestAnimationFrame(renderLoop);
+}
+
 function spawnParticles(x, y, color, count = 18) {
+  if (gs.particles.length > 320) return;
   for (let i = 0; i < count; i++) {
     const ang = Math.random() * Math.PI * 2, spd = 2 + Math.random() * 7;
-    gs.particles.push({ x, y, vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd, color, size: 3+Math.random()*4, alpha: 1.0 });
+    gs.particles.push({ x, y, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd, color, size: 3 + Math.random() * 4, alpha: 1.0 });
   }
 }
-
 function addFloatText(text, x, y, color = "#ffe600") {
+  if (gs.floatingTexts.length > 40) gs.floatingTexts.shift();
   gs.floatingTexts.push({ text, x, y, color, alpha: 1.0, vy: -2.2 });
 }
-
 function flashScreen(color = "#fff") {
   const fl = document.getElementById('flashOverlay');
   fl.style.background = color; fl.style.opacity = '0.72';
@@ -1099,12 +1272,29 @@ function togglePause() {
   gs.paused = !gs.paused;
   const t = I18N[curLang];
   document.getElementById('pauseBtn').innerText = gs.paused ? t.resume : t.pause;
-  const radioEl = document.getElementById('globalRadioPlayer');
-  if (cfg.audioMode === 'radio') {
-    if (gs.paused) radioEl.pause();
-    else radioEl.play().catch(()=>{});
+
+  if (gs.paused) {
+    stopLoop();
+    keys.left = keys.right = false;
+    clearRadioWatchdog();
+    if (cfg.audioMode === 'radio' && !usingSynthFallback) { try { radioEl.pause(); } catch (e) {} }
+    if (audioCtx && audioCtx.suspend) audioCtx.suspend().catch(() => {});
+    drawPausedOverlay();
+  } else {
+    if (audioCtx && audioCtx.resume) audioCtx.resume().catch(() => {});
+    if (cfg.audioMode === 'radio' && !usingSynthFallback && radioEl.getAttribute('src')) {
+      const session = audioSession, attempt = radioAttempt;
+      radioPending = true;
+      armRadioWatchdog(7000);
+      const p = radioEl.play();
+      if (p && p.catch) p.catch(err => {
+        if (err && err.name === 'AbortError') return;
+        handleRadioFailure(session, 'resume', attempt);
+      });
+    }
+    gs.invincibleUntil = Math.max(gs.invincibleUntil, gs.now + 800);  // 恢復後 0.8 秒保護
+    startLoop();
   }
-  if (!gs.paused) requestAnimationFrame(renderLoop);
 }
 
 function startGame() {
@@ -1112,29 +1302,41 @@ function startGame() {
   document.getElementById('resultModal').style.display = 'none';
   document.getElementById('hud').style.display = 'flex';
   document.getElementById('bottomBar').style.display = 'flex';
+  document.getElementById('pauseBtn').innerText = I18N[curLang].pause;
 
-  gs.active = true; gs.paused = false; gs.score = 0;
-  gs.vibe = cfg.cure === 'aged' ? 100 : 85;
-  gs.badTrip = false;
-  gs.combo = cfg.cure === 'quantum' ? 4 : 1;
-  gs.maxCombo = gs.combo; gs.grazeCount = 0; gs.skillCharge = 100;
-  gs.stageIdx = 0; gs.items = []; gs.particles = []; gs.trail = [];
-  gs.floatingTexts = []; gs.lasers = [];
-  gs.bossLaser = { state: 'idle', x: width / 2, timer: 0 };
+  Object.assign(gs, {
+    active: true, paused: false, now: 0, score: 0,
+    vibe: cfg.cure === 'aged' ? 100 : 85, badTrip: false,
+    combo: cfg.cure === 'quantum' ? 4 : 1, grazeCount: 0, skillCharge: 100,
+    stageIdx: 0, pendingStage: -1, pendingVictory: false,
+    invincibleUntil: 0, hurtUntil: 0, dashUntil: 0, screenShake: 0,
+    items: [], particles: [], trail: [], floatingTexts: [], ripples: [], lasers: [],
+    playerX: width / 2, targetX: width / 2
+  });
+  gs.maxCombo = gs.combo;
+  keys.left = keys.right = false;
+  beatPulse = 0;
+  canvas.classList.remove('spin-burst');
 
-  canvas.classList.remove('wave-indica', 'bad-trip-fx');
-  if (cfg.strain === 'indica') canvas.classList.add('wave-indica');
-
+  computeLayout();
   initAudioSystem();
   setupStage(0);
-  chargeSkill(0);
-  requestAnimationFrame(renderLoop);
+  refreshSkillButton(true);
+  renderHUD();
+  computeLayout();
+  startLoop();
 }
 
 function setupStage(idx) {
-  gs.stageIdx = idx; gs.stageProgress = 0;
-  gs.invincibleUntil = performance.now() + 2200;
+  gs.stageIdx = idx;
+  gs.stageProgress = 0;
+  gs.pendingStage = -1;
+  gs.invincibleUntil = gs.now + 2200;
   gs.items = [];
+  gs.lastGoodAt = gs.now;
+  gs.lastProgressAt = gs.now;
+  gs.lastStarAt = gs.now - 2000;
+  gs.bossLaser = { state: 'idle', x: width / 2, since: gs.now + 1500, hitApplied: false };
 
   const meta = STAGE_META[idx];
   const diffMult = cfg.diff === 'easy' ? 0.7 : (cfg.diff === 'hard' ? 1.35 : 1);
@@ -1148,99 +1350,134 @@ function setupStage(idx) {
   const quote = t.quotes[cfg.avatar][idx] || t.quotes[cfg.avatar][0];
   showNarrative(quote);
   addFloatText(`🚀 ${t.stages[idx].name}`, width / 2, height / 2 - 40, "#00f3ff");
-  updateHUD();
+  renderHUD();
+  computeLayout();
 }
 
+// 關鍵修復：進度達標時只「標記」換關，等本幀的物件迴圈跑完才真正切換
 function advanceStage(amount) {
   gs.stageProgress += amount;
-  const maxStages = cfg.diff === 'easy' ? 3 : 5;
-  if (gs.stageProgress >= gs.stageTarget) {
-    if (gs.stageIdx + 1 >= maxStages) { endGame(true); return; }
-    else setupStage(gs.stageIdx + 1);
+  gs.lastProgressAt = gs.now;
+  markHUD();
+  if (gs.stageProgress >= gs.stageTarget && gs.pendingStage < 0 && !gs.pendingVictory) {
+    const maxStages = cfg.diff === 'easy' ? 3 : 5;
+    if (gs.stageIdx + 1 >= maxStages) gs.pendingVictory = true;
+    else gs.pendingStage = gs.stageIdx + 1;
   }
-  updateHUD();
 }
 
+let lastSkillLabel = '';
+function refreshSkillButton(force) {
+  const btn = document.getElementById('skillBtn');
+  const t = I18N[curLang];
+  const ready = gs.skillCharge >= 100;
+  const label = ready ? t.skillReady : t.skillCharging(Math.floor(gs.skillCharge));
+  if (force || label !== lastSkillLabel) {
+    btn.innerText = label;
+    lastSkillLabel = label;
+    btn.classList.toggle('ready', ready);
+  }
+}
 function chargeSkill(amt) {
   const mult = cfg.cure === 'fresh' ? 1.5 : 1.0;
   gs.skillCharge = Math.min(100, gs.skillCharge + amt * mult);
-  const btn = document.getElementById('skillBtn');
-  const t = I18N[curLang];
-  if (gs.skillCharge >= 100) {
-    btn.classList.add('ready');
-    btn.innerText = t.skillReady;
-  } else {
-    btn.classList.remove('ready');
-    btn.innerText = t.skillCharging(Math.floor(gs.skillCharge));
-  }
+  refreshSkillButton(false);
 }
 
 function triggerSkill() {
   if (gs.skillCharge < 100 || !gs.active || gs.paused) return;
-  gs.skillCharge = 0; chargeSkill(0);
+  gs.skillCharge = 0;
+  refreshSkillButton(true);
 
   flashScreen("#00f3ff"); gs.screenShake = 15;
   playSFX(440, 1320, 0.32, 'sawtooth');
-  addFloatText(I18N[curLang].skills[cfg.avatar], gs.playerX, height - 165, "#00ff66");
+  addFloatText(I18N[curLang].skills[cfg.avatar], gs.playerX, layout.playerY - 60, "#00ff66");
 
   if (cfg.avatar === 'dog') {
     gs.items.forEach(it => { if (it.type === 'bad') { spawnParticles(it.x, it.y, "#ff0055", 12); gs.score += 300; } });
     gs.items = gs.items.filter(it => it.type !== 'bad');
   } else if (cfg.avatar === 'cat') {
-    gs.items.forEach(it => { if (it.type !== 'bad') { it.x = gs.playerX; it.y = height - 115; } });
+    gs.items.forEach(it => { if (it.type !== 'bad') { it.x = it.baseX = gs.playerX; it.y = layout.playerY - 10; } });
   } else if (cfg.avatar === 'human') {
-    gs.vibe = 100; gs.invincibleUntil = performance.now() + 3000;
+    gs.vibe = 100; gs.invincibleUntil = gs.now + 3000;
   } else if (cfg.avatar === 'alien') {
     gs.items.forEach(it => { if (it.type === 'bad') { it.type = 'good'; spawnParticles(it.x, it.y, "#ffe600", 10); } });
   }
-  updateHUD();
+  markHUD();
 }
 
-function updateHUD() {
-  const t = I18N[curLang];
-  const stText = t.stages[gs.stageIdx];
-  document.getElementById('scoreVal').innerText = Math.floor(gs.score);
-  document.getElementById('comboVal').innerText = `🔥 COMBO x${gs.combo}`;
-  document.getElementById('vibeBar').style.width = `${Math.max(0, Math.min(100, gs.vibe))}%`;
-  document.getElementById('subInfo').innerText = `${cfg.strain.toUpperCase()} | ${cfg.genre.toUpperCase()} | THC ${cfg.thc}%`;
-
-  const maxSt = cfg.diff === 'easy' ? 3 : 5;
-  document.getElementById('stageTitle').innerText = `(${gs.stageIdx + 1}/${maxSt}) ${stText.name}`;
-  document.getElementById('missionDesc').innerText = stText.desc(gs.stageProgress, gs.stageTarget);
-  document.getElementById('stageProgBar').style.width = `${Math.min(100, (gs.stageProgress / gs.stageTarget) * 100)}%`;
-
-  const statusEl = document.getElementById('tripStatus');
-  const hintEl = document.getElementById('vibeHint');
-  if (gs.vibe <= 0) { endGame(false); return; }
-  else if (gs.vibe < 35) {
-    gs.badTrip = true; canvas.classList.add('bad-trip-fx');
-    statusEl.innerText = t.badTrip; statusEl.style.color = "#ff0055";
-    hintEl.innerText = t.vibeDanger;
-  } else {
-    gs.badTrip = false; canvas.classList.remove('bad-trip-fx');
-    statusEl.innerText = t.happyTrip; statusEl.style.color = "#00ff66";
-    hintEl.innerText = t.vibeNormal;
+function takeDamage(amount, x, y) {
+  if (gs.now < gs.invincibleUntil) {
+    addFloatText("🛡️ SHIELDED!", x, y, "#00ffaa");
+    return false;
   }
+  gs.vibe -= amount;
+  gs.combo = 1;
+  gs.invincibleUntil = gs.now + 650;   // 受擊後短暫無敵＋閃爍，避免連續被秒
+  gs.hurtUntil = gs.now + 650;
+  gs.screenShake = 14;
+  flashScreen("#ff0033");
+  spawnParticles(x, y, "#ff0044", 24);
+  playSFX(150, 42, 0.28, 'sawtooth');
+  addFloatText(`💥 -${amount}% VIBE`, x, y, "#ff0055");
+  markHUD();
+  return true;
 }
+
+// --- HUD：每幀最多更新一次，只寫有變動的欄位 ---
+let hudDirty = true;
+const hudCache = {};
+function markHUD() { hudDirty = true; }
+function flushHUD() { if (hudDirty) renderHUD(); }
+function setText(id, txt) {
+  if (hudCache[id] === txt) return;
+  hudCache[id] = txt;
+  document.getElementById(id).textContent = txt;
+}
+function setStyle(id, prop, val) {
+  const k = `${id}.${prop}`;
+  if (hudCache[k] === val) return;
+  hudCache[k] = val;
+  document.getElementById(id).style[prop] = val;
+}
+function renderHUD() {
+  hudDirty = false;
+  const t = I18N[curLang];
+  const st = t.stages[gs.stageIdx];
+  setText('scoreVal', String(Math.floor(gs.score)));
+  setText('comboVal', `🔥 COMBO x${gs.combo}`);
+  setStyle('vibeBar', 'width', `${clamp(gs.vibe, 0, 100)}%`);
+  setText('subInfo', `${cfg.strain.toUpperCase()} | ${cfg.genre.toUpperCase()} | THC ${cfg.thc}%`);
+  const maxSt = cfg.diff === 'easy' ? 3 : 5;
+  setText('stageTitle', `(${gs.stageIdx + 1}/${maxSt}) ${st.name}`);
+  setText('missionDesc', st.desc(Math.min(gs.stageProgress, gs.stageTarget), gs.stageTarget));
+  setStyle('stageProgBar', 'width', `${Math.min(100, (gs.stageProgress / gs.stageTarget) * 100)}%`);
+  setText('tripStatus', gs.badTrip ? t.badTrip : t.happyTrip);
+  setStyle('tripStatus', 'color', gs.badTrip ? '#ff0055' : '#00ff66');
+  setText('vibeHint', gs.badTrip ? t.vibeDanger : t.vibeNormal);
+}
+function updateHUD() { renderHUD(); }
 
 function endGame(victory) {
+  if (!gs.active) return;
   gs.active = false;
+  gs.paused = false;
+  stopLoop();
   stopAllAudio();
-  canvas.classList.remove('bad-trip-fx', 'wave-indica');
 
   const finalScore = Math.floor(gs.score);
   const t = I18N[curLang];
   if (finalScore > savedHighScore) {
     savedHighScore = finalScore;
-    localStorage.setItem('cybertrip_best', savedHighScore);
+    safeStorage.set('cybertrip_best', String(savedHighScore));
     document.getElementById('highScoreBadge').innerText = `${t.bestRecord}${savedHighScore}`;
   }
+  renderHUD();
 
   document.getElementById('resultModal').style.display = 'flex';
   const title = document.getElementById('resTitle');
   const desc = document.getElementById('resDesc');
   const rank = document.getElementById('resRank');
-
   if (victory) {
     title.innerText = t.winTitle; title.style.color = "#00ff66";
     desc.innerText = t.winDesc;
@@ -1250,7 +1487,6 @@ function endGame(victory) {
     desc.innerText = t.loseDesc;
     rank.innerText = "💀 RANK: F (COUCH-LOCKED)";
   }
-
   document.getElementById('resScore').innerText = finalScore;
   document.getElementById('resDetail').innerText = curLang === 'zh'
     ? `最高連擊：${gs.maxCombo}x ｜ 驚險擦彈：${gs.grazeCount} 次 ｜ 難度：${cfg.diff.toUpperCase()}`
@@ -1260,39 +1496,47 @@ function endGame(victory) {
 
 function quitToMenu() {
   gs.active = false;
+  gs.paused = false;
+  stopLoop();
   stopAllAudio();
-  canvas.classList.remove('bad-trip-fx', 'wave-indica');
   document.getElementById('hud').style.display = 'none';
   document.getElementById('bottomBar').style.display = 'none';
   document.getElementById('resultModal').style.display = 'none';
   document.getElementById('mainMenu').style.display = 'flex';
+  computeLayout();
 }
 
-// ==================== 5. 幾何背景與遊戲渲染引擎 ====================
-function drawBackgroundAndBoss(t, meta) {
-  ctx.fillStyle = cfg.strain === 'indica' ? "rgba(6, 2, 16, 0.24)" : "rgba(5, 1, 14, 0.38)";
+// ==================== 5. 渲染與物理 ====================
+function drawBackgroundAndBoss(now, meta, dt) {
+  ctx.shadowBlur = 0;   // 修正：避免上一幀的光暈套用到全螢幕 fillRect（主要卡頓來源）
+  const fade = cfg.strain === 'indica' ? 0.24 : 0.38;
+  ctx.fillStyle = `rgba(5, 1, 14, ${1 - Math.pow(1 - fade, dt)})`;
   ctx.fillRect(0, 0, width, height);
 
   const cx = width / 2, cy = height / 2;
-  beatPulse *= 0.88;
+  beatPulse *= Math.pow(0.88, dt);
   const pulseScale = 1 + beatPulse * 0.18;
 
   ctx.save();
   if (gs.screenShake > 0) {
     ctx.translate((Math.random() - 0.5) * gs.screenShake, (Math.random() - 0.5) * gs.screenShake);
-    gs.screenShake *= 0.85; if (gs.screenShake < 0.5) gs.screenShake = 0;
+    gs.screenShake *= Math.pow(0.85, dt);
+    if (gs.screenShake < 0.5) gs.screenShake = 0;
+  }
+  if (cfg.strain === 'indica') {   // Indica 呼吸感改在 Canvas 內部做，不再用 CSS transform（會讓點擊位置偏移）
+    const s = 1 + 0.03 * Math.sin(now * 0.0018);
+    ctx.translate(cx, cy); ctx.scale(s, s); ctx.translate(-cx, -cy);
   }
 
   if (meta.bgType === 'cyber_grid') {
     const grad = ctx.createLinearGradient(0, cy - 170, 0, cy + 20);
     grad.addColorStop(0, "#ff007f"); grad.addColorStop(1, "#ffe600");
     ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(cx, cy - 60, 90 * pulseScale, 0, Math.PI * 2); ctx.fill();
-
     ctx.strokeStyle = meta.c2; ctx.lineWidth = 1.5 + beatPulse * 2;
     for (let i = -10; i <= 10; i++) {
       ctx.beginPath(); ctx.moveTo(cx + i * 25, cy); ctx.lineTo(cx + i * 185, height); ctx.stroke();
     }
-    const off = (t * 0.16) % 40;
+    const off = (now * 0.16) % 40;
     for (let y = cy; y < height; y += 35) {
       ctx.beginPath(); ctx.moveTo(0, y + off); ctx.lineTo(width, y + off); ctx.stroke();
     }
@@ -1301,7 +1545,7 @@ function drawBackgroundAndBoss(t, meta) {
       ctx.beginPath(); ctx.strokeStyle = w % 2 === 0 ? meta.c1 : meta.c2;
       ctx.lineWidth = 2.5 + beatPulse * 3;
       for (let x = 0; x <= width; x += 24) {
-        const y = cy + Math.sin(x * 0.01 + t * 0.004 + w) * (65 + w * 24) * pulseScale;
+        const y = cy + Math.sin(x * 0.01 + now * 0.004 + w) * (65 + w * 24) * pulseScale;
         if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
       }
       ctx.stroke();
@@ -1310,8 +1554,8 @@ function drawBackgroundAndBoss(t, meta) {
     ctx.beginPath(); ctx.arc(cx, cy, 35 * pulseScale, 0, Math.PI * 2);
     ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3; ctx.stroke();
     for (let r = 1; r <= 7; r++) {
-      const rad = ((t * 0.26 + r * 90) % 630) * (1 + beatPulse * 0.06);
-      ctx.save(); ctx.translate(cx, cy); ctx.rotate(t * 0.0012 * (r % 2 === 0 ? 1 : -1));
+      const rad = ((now * 0.26 + r * 90) % 630) * (1 + beatPulse * 0.06);
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(now * 0.0012 * (r % 2 === 0 ? 1 : -1));
       ctx.strokeStyle = r % 2 === 0 ? meta.c1 : meta.c2; ctx.lineWidth = 2.5;
       ctx.beginPath();
       for (let s = 0; s <= 6; s++) {
@@ -1326,81 +1570,144 @@ function drawBackgroundAndBoss(t, meta) {
     for (let i = 0; i < 12; i++) {
       ctx.rotate((Math.PI * 2) / 12);
       ctx.strokeStyle = i % 2 === 0 ? meta.c1 : meta.c2; ctx.lineWidth = 2 + beatPulse * 2;
-      const p = (135 + Math.sin(t * 0.005) * 55) * pulseScale;
-      ctx.beginPath(); ctx.ellipse(p * 0.6, 0, p, 45, t * 0.002, 0, Math.PI * 2); ctx.stroke();
+      const p = (135 + Math.sin(now * 0.005) * 55) * pulseScale;
+      ctx.beginPath(); ctx.ellipse(p * 0.6, 0, p, 45, now * 0.002, 0, Math.PI * 2); ctx.stroke();
     }
     ctx.restore();
   } else if (meta.bgType === 'boss_void') {
-    gs.bossX = cx + Math.sin(t * 0.0022) * (width * 0.3);
-    const bossY = 135;
+    const bossY = layout.bossY;
+    gs.bossX = cx + Math.sin(now * 0.0022) * (width * 0.3);
+    drawBossLaser(now, bossY);
 
-    gs.bossLaser.timer++;
-    if (gs.bossLaser.state === 'idle' && gs.bossLaser.timer > 110) {
-      gs.bossLaser.state = 'warn'; gs.bossLaser.x = gs.playerX; gs.bossLaser.timer = 0;
-      playSFX(880, 440, 0.2, 'sine');
-    } else if (gs.bossLaser.state === 'warn') {
-      ctx.strokeStyle = `rgba(255, 0, 68, ${0.3 + Math.sin(t * 0.03) * 0.3})`;
-      ctx.lineWidth = 6; ctx.setLineDash([12, 8]);
-      ctx.beginPath(); ctx.moveTo(gs.bossLaser.x, bossY + 40); ctx.lineTo(gs.bossLaser.x, height); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = "#ff0044"; ctx.font = "bold 16px sans-serif"; ctx.textAlign = "center";
-      ctx.fillText(I18N[curLang].laserWarn, gs.bossLaser.x, height - 165);
-
-      if (gs.bossLaser.timer > 68) {
-        gs.bossLaser.state = 'fire'; gs.bossLaser.timer = 0; gs.screenShake = 12;
-        playSFX(180, 55, 0.35, 'sawtooth');
-      }
-    } else if (gs.bossLaser.state === 'fire') {
-      ctx.fillStyle = "rgba(255, 0, 85, 0.85)"; ctx.shadowColor = "#ff0055"; ctx.shadowBlur = 30;
-      ctx.fillRect(gs.bossLaser.x - 28, bossY + 40, 56, height);
-      if (Math.abs(gs.playerX - gs.bossLaser.x) < 42 && t > gs.invincibleUntil) {
-        gs.vibe -= (cfg.cure === 'aged' ? 0.8 : 1.5); gs.combo = 1; updateHUD();
-      }
-      if (gs.bossLaser.timer > 28) { gs.bossLaser.state = 'idle'; gs.bossLaser.timer = 0; }
-    }
-
-    ctx.shadowColor = "#ff0033"; ctx.shadowBlur = 35; ctx.fillStyle = "#220011"; ctx.strokeStyle = "#ff0055"; ctx.lineWidth = 4;
+    ctx.shadowColor = "#ff0033"; ctx.shadowBlur = 24;
+    ctx.fillStyle = "#220011"; ctx.strokeStyle = "#ff0055"; ctx.lineWidth = 4;
     ctx.beginPath(); ctx.ellipse(gs.bossX, bossY, 105 * pulseScale, 52 * pulseScale, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
     ctx.fillStyle = "#ff0033"; ctx.beginPath(); ctx.arc(gs.bossX, bossY, 30, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(gs.bossX, bossY, 13, 0, Math.PI * 2); ctx.fill();
   }
   ctx.restore();
+  ctx.shadowBlur = 0;
 }
 
-function renderLoop(t) {
-  if (!gs.active || gs.paused) return;
+// Boss 雷射：以「遊戲時間」計時（不受螢幕更新率影響），命中一次只扣一次血
+function drawBossLaser(now, bossY) {
+  const bl = gs.bossLaser;
+  const idleMs = cfg.diff === 'hard' ? 1300 : (cfg.diff === 'easy' ? 2400 : 1900);
+  const warnMs = cfg.diff === 'hard' ? 850 : (cfg.diff === 'easy' ? 1400 : 1100);
+  const fireMs = 420;
 
+  if (bl.state === 'idle') {
+    if (now - bl.since > idleMs) {
+      bl.state = 'warn'; bl.x = gs.playerX; bl.since = now;
+      playSFX(880, 440, 0.2, 'sine');
+    }
+  } else if (bl.state === 'warn') {
+    const prog = clamp((now - bl.since) / warnMs, 0, 1);
+    ctx.save();
+    ctx.strokeStyle = `rgba(255, 0, 68, ${0.35 + Math.sin(now * 0.03) * 0.3})`;
+    ctx.lineWidth = 6; ctx.setLineDash([12, 8]);
+    ctx.beginPath(); ctx.moveTo(bl.x, bossY + 40); ctx.lineTo(bl.x, height); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = `rgba(255, 0, 68, ${0.12 + prog * 0.25})`;   // 預警帶逐漸變實，提示倒數
+    ctx.fillRect(bl.x - 28 * prog, bossY + 40, 56 * prog, height);
+    ctx.fillStyle = "#ff0044"; ctx.font = "bold 16px sans-serif"; ctx.textAlign = "center";
+    ctx.fillText(I18N[curLang].laserWarn, bl.x, layout.playerY - 70);
+    ctx.restore();
+    if (now - bl.since > warnMs) {
+      bl.state = 'fire'; bl.since = now; bl.hitApplied = false;
+      gs.screenShake = 12;
+      playSFX(180, 55, 0.35, 'sawtooth');
+    }
+  } else if (bl.state === 'fire') {
+    ctx.save();
+    ctx.fillStyle = "rgba(255, 0, 85, 0.85)"; ctx.shadowColor = "#ff0055"; ctx.shadowBlur = 24;
+    ctx.fillRect(bl.x - 28, bossY + 40, 56, height);
+    ctx.restore();
+    if (!bl.hitApplied && Math.abs(gs.playerX - bl.x) < 44 && now >= gs.invincibleUntil) {
+      takeDamage(cfg.cure === 'aged' ? 10 : 18, gs.playerX, layout.playerY - 40);
+      bl.hitApplied = true;
+    }
+    if (now - bl.since > fireMs) { bl.state = 'idle'; bl.since = now; }
+  }
+}
+
+function spawnItem(type, x, y, vyBase, extra = {}) {
+  const tune = STAGE_TUNING[gs.stageIdx];
+  gs.items.push(Object.assign({
+    x, baseX: x, y,
+    vy: vyBase + Math.random() * 2.2 * tune.speed,
+    phase: Math.random() * Math.PI * 2,
+    type, grazed: false, nearMiss: false, guided: false, bonus: 0
+  }, extra));
+}
+
+const ITEM_SPRITES = {
+  good: ['✨', '#00f3ff'], bad: ['👁️', '#ff0033'],
+  cbd: ['🌿', '#00ff66'], star: ['🌟', '#ffe600']
+};
+
+function stepAndDraw(dt) {
+  gs.now += dt * FRAME_MS;
+  const now = gs.now;
   const meta = STAGE_META[gs.stageIdx];
-  drawBackgroundAndBoss(t, meta);
+  const tune = STAGE_TUNING[gs.stageIdx];
+  const playerY = layout.playerY;
+  ctx.globalAlpha = 1;
 
+  drawBackgroundAndBoss(now, meta, dt);
+
+  // 鍵盤輔助操控
+  const kDir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+  if (kDir) gs.targetX = clamp(gs.targetX + kDir * 15 * dt, 40, width - 40);
+
+  // --- 生成 ---
   const diffSpd = cfg.diff === 'easy' ? 0.8 : (cfg.diff === 'hard' ? 1.35 : 1);
   const strainSpd = cfg.strain === 'sativa' ? 1.22 : (cfg.strain === 'indica' ? 0.78 : 1.0);
-  const fallSpeed = 5.2 * diffSpd * strainSpd * (1 + cfg.thc / 160);
+  const fallSpeed = Math.min(12.5, 5.2 * diffSpd * strainSpd * (1 + cfg.thc / 160) * tune.speed);
+  const margin = meta.bgType === 'sine_wave' ? 110 : 70;
+  const randX = () => margin + Math.random() * Math.max(1, width - margin * 2);
+  const nearPlayerX = (spread) => clamp(gs.playerX + (Math.random() * 2 - 1) * spread, margin, Math.max(margin, width - margin));
+  const spawnY = meta.goalType === 'boss' ? layout.bossY + 25 : -40;
 
-  if (Math.random() < 0.075 * diffSpd) {
+  if (Math.random() < tune.spawn * diffSpd * dt) {
     const r = Math.random();
     let type = 'good';
-    const badProb = (cfg.thc / 230) + (cfg.diff === 'hard' ? 0.14 : 0);
+    const badProb = Math.min(0.45, ((cfg.thc / 230) + (cfg.diff === 'hard' ? 0.14 : 0)) * tune.bad);
     if (meta.goalType === 'boss' && r > 0.62) type = 'star';
     else if (r < badProb) type = 'bad';
     else if (r > 0.90) type = 'cbd';
-
-    const startX = Math.random() * (width - 140) + 70;
-    gs.items.push({ x: startX, baseX: startX, y: meta.goalType === 'boss' ? 150 : -40, vy: fallSpeed + Math.random()*2.2, phase: Math.random()*Math.PI*2, type, grazed: false });
+    spawnItem(type, randX(), spawnY, fallSpeed);
   }
 
-  const sway = Math.sin(t * 0.005) * (cfg.thc * 0.2);
+  // --- 保底機制：太久沒接到就在玩家附近補一顆，絕不讓進度條卡死 ---
+  if (meta.goalType !== 'boss') {
+    if (now - gs.lastGoodAt > tune.pityMs && !gs.items.some(it => it.type === 'good' && it.y < playerY - 120)) {
+      spawnItem('good', nearPlayerX(130), spawnY, fallSpeed * 0.9, { guided: true });
+      gs.lastGoodAt = now - tune.pityMs + 1500;
+    }
+    if (now - gs.lastProgressAt > STALL_MS && !gs.items.some(it => it.bonus)) {
+      spawnItem('good', nearPlayerX(60), spawnY, fallSpeed * 0.8, { guided: true, bonus: 2 });
+      addFloatText(I18N[curLang].supportOrb, width / 2, height * 0.35, "#ffe600");
+      gs.lastProgressAt = now - STALL_MS / 2;
+    }
+  } else if (now - gs.lastStarAt > 3800 && !gs.items.some(it => it.type === 'star')) {
+    spawnItem('star', nearPlayerX(160), spawnY, fallSpeed * 0.85, { guided: true });
+    gs.lastStarAt = now;
+  }
+
+  // --- 玩家移動 ---
+  const sway = Math.sin(now * 0.005) * (cfg.thc * 0.2) * (gs.stageIdx === 0 ? 0.5 : 1);
   let desiredX = gs.targetX + sway;
-  
-  // 關鍵修復：將 Stage 3 引力係數大幅調溫（0.008 -> 0.002），防止物件死鎖在中央
-  if (meta.bgType === 'hex_tunnel') desiredX += (width / 2 - gs.playerX) * 0.03;
-  
-  gs.playerX += (desiredX - gs.playerX) * (cfg.strain === 'indica' ? 0.075 : 0.16);
-  gs.playerX = Math.max(40, Math.min(width - 40, gs.playerX));
-  const playerY = height - 105;
+  if (meta.bgType === 'hex_tunnel') desiredX += (width / 2 - gs.targetX) * 0.06;   // 溫和的固定偏移，不會與玩家互相拉扯
+  const follow = now < gs.dashUntil ? 0.38 : (cfg.strain === 'indica' ? 0.085 : 0.17);
+  gs.playerX += (desiredX - gs.playerX) * (1 - Math.pow(1 - follow, dt));
+  gs.playerX = clamp(gs.playerX, 40, Math.max(40, width - 40));
 
   const cloneOffsets = meta.bgType === 'mandala' ? [-110, 0, 110] : [0];
+  const catchers = cloneOffsets.map(o => gs.playerX + o);
 
+  // 拖尾
   gs.trail.push({ x: gs.playerX, y: playerY });
   if (gs.trail.length > 14) gs.trail.shift();
   for (let i = 0; i < gs.trail.length; i++) {
@@ -1409,112 +1716,189 @@ function renderLoop(t) {
     ctx.beginPath(); ctx.arc(tr.x, tr.y + (14 - i) * 4, 24 * ratio, 0, Math.PI * 2); ctx.fill();
   }
 
+  // --- 掉落物 ---
+  const thcMult = 1 + (cfg.thc / 45), diffMult = cfg.diff === 'hard' ? 3 : 1;
   for (let i = gs.items.length - 1; i >= 0; i--) {
     const it = gs.items[i];
-    it.y += it.vy;
-    if (meta.bgType === 'sine_wave') it.x = it.baseX + Math.sin(it.y * 0.022 + it.phase) * 75;
-    else if (meta.bgType === 'hex_tunnel') it.x += (width / 2 - it.x) * 0.0025; // 溫和引力，絕不卡死
+    if (!it) continue;
+    it.y += it.vy * dt;
 
-    ctx.font = "35px sans-serif"; ctx.textAlign = "center";
-    if (it.type === 'good') { ctx.shadowColor = "#00f3ff"; ctx.shadowBlur = 15; ctx.fillText("✨", it.x, it.y); }
-    else if (it.type === 'bad') { ctx.shadowColor = "#ff0033"; ctx.shadowBlur = 20; ctx.fillText("👁️", it.x, it.y); }
-    else if (it.type === 'cbd') { ctx.shadowColor = "#00ff66"; ctx.shadowBlur = 18; ctx.fillText("🌿", it.x, it.y); }
-    else if (it.type === 'star') { ctx.shadowColor = "#ffe600"; ctx.shadowBlur = 22; ctx.fillText("🌟", it.x, it.y); }
-
-    let hitGood = false;
-    for (const off of cloneOffsets) {
-      if (Math.hypot(it.x - (gs.playerX + off), it.y - playerY) < 48) { hitGood = true; break; }
-    }
-    const distMain = Math.hypot(it.x - gs.playerX, it.y - playerY);
-
-    if ((it.type !== 'bad' && hitGood) || (it.type === 'bad' && distMain < 46)) {
-      const thcMult = 1 + (cfg.thc / 45), diffMult = cfg.diff === 'hard' ? 3 : 1, badBonus = gs.badTrip ? 2.5 : 1.0;
-
-      if (it.type === 'good') {
-        const pts = Math.round(100 * gs.combo * thcMult * diffMult * badBonus);
-        gs.score += pts; gs.combo = Math.min(16, gs.combo + 1); gs.maxCombo = Math.max(gs.maxCombo, gs.combo);
-        gs.vibe = Math.min(100, gs.vibe + 4); chargeSkill(14);
-        spawnParticles(it.x, it.y, "#00f3ff", 16); playSFX(440 + gs.combo * 32, 880 + gs.combo * 40, 0.11, 'sine');
-        addFloatText(`+${pts}${gs.badTrip ? ' (2.5x!)' : ''}`, it.x, it.y, "#00f3ff");
-        if (meta.goalType !== 'boss') advanceStage(1);
-      } else if (it.type === 'star') {
-        gs.score += 1200 * gs.combo;
-        gs.lasers.push({ x1: gs.playerX, y1: playerY, x2: gs.bossX, y2: 135, alpha: 1.0 });
-        gs.screenShake = 10; chargeSkill(25); spawnParticles(gs.bossX, 135, "#ffe600", 28);
-        playSFX(620, 1550, 0.25, 'sawtooth');
-        addFloatText("💥 PHOTON CANNON! (-25% HP)", gs.bossX, 190, "#ffe600");
-        advanceStage(25);
-      } else if (it.type === 'cbd') {
-        gs.vibe = Math.min(100, gs.vibe + 32); gs.score += 600; chargeSkill(20);
-        flashScreen("#00ff66"); spawnParticles(it.x, it.y, "#00ff66", 20);
-        playSFX(523, 1046, 0.22, 'triangle');
-        addFloatText("🌿 CBD +32% VIBE!", it.x, it.y, "#00ff66");
-      } else if (it.type === 'bad') {
-        if (t > gs.invincibleUntil) {
-          const dmg = cfg.cure === 'aged' ? 12 : 24;
-          gs.vibe -= dmg; gs.combo = 1; gs.screenShake = 14;
-          flashScreen("#ff0033"); spawnParticles(it.x, it.y, "#ff0044", 24);
-          playSFX(150, 42, 0.28, 'sawtooth');
-          addFloatText(`💥 -${dmg}% VIBE`, it.x, it.y, "#ff0055");
-        } else {
-          addFloatText("🛡️ SHIELDED!", it.x, it.y, "#00ffaa");
+    // 接球吸附輔助（只作用於好東西，越前面的關卡越寬鬆）
+    if (it.type !== 'bad') {
+      const dy = playerY - it.y;
+      if (dy > -20 && dy < 240) {
+        let nearest = catchers[0], best = Infinity;
+        for (const cxp of catchers) { const d = Math.abs(cxp - it.x); if (d < best) { best = d; nearest = cxp; } }
+        if (best < 140) {
+          const k = 1 - Math.pow(1 - Math.min(0.4, tune.assist * (it.guided ? 1.8 : 1)), dt);
+          const pull = (nearest - it.x) * k;
+          if (meta.bgType === 'sine_wave') it.baseX += pull; else it.x += pull;
         }
       }
-      updateHUD(); gs.items.splice(i, 1); continue;
+    }
+    if (meta.bgType === 'sine_wave') {
+      const amp = 75 * (1 - 0.45 * clamp(it.y / playerY, 0, 1));   // 越接近玩家擺幅越小
+      it.x = it.baseX + Math.sin(it.y * 0.022 + it.phase) * amp;
+    } else if (meta.bgType === 'hex_tunnel') {
+      it.x += (width / 2 - it.x) * (1 - Math.pow(1 - 0.0025, dt));
     }
 
-    if (it.type === 'bad' && !it.grazed && distMain >= 46 && distMain < 94) {
-      it.grazed = true; gs.grazeCount++;
-      const gPts = Math.round(500 * gs.combo * (gs.badTrip ? 2.5 : 1));
-      gs.score += gPts; chargeSkill(28); spawnParticles(it.x, it.y, "#ffe600", 8);
-      playSFX(950, 1480, 0.08, 'sine');
-      addFloatText(`⚡ GRAZE! +${gPts} (MP+28%)`, it.x, it.y - 20, "#ffe600");
-      updateHUD();
+    const spr = ITEM_SPRITES[it.type];
+    if (it.bonus) drawSprite(getEmojiSprite('✨', 46, '#ffe600'), it.x, it.y);
+    else drawSprite(getEmojiSprite(spr[0], 35, spr[1]), it.x, it.y);
+
+    // 碰撞
+    let caught = false;
+    if (it.type !== 'bad') {
+      for (const cxp of catchers) {
+        if (Math.hypot(it.x - cxp, it.y - playerY) < tune.catchR) { caught = true; break; }
+      }
+    }
+    if (caught) { handleCatch(it, meta, thcMult, diffMult); gs.items.splice(i, 1); continue; }
+
+    if (it.type === 'bad') {
+      const distMain = Math.hypot(it.x - gs.playerX, it.y - playerY);
+      if (distMain < HIT_R_BAD) {
+        takeDamage(cfg.cure === 'aged' ? 12 : 24, it.x, it.y);
+        gs.items.splice(i, 1);
+        continue;
+      }
+      if (distMain < GRAZE_R) it.nearMiss = true;
+      // 擦彈改為「安全通過後才結算」，不會出現先拿擦彈獎勵又被撞的情況
+      if (it.nearMiss && !it.grazed && it.y > playerY + 36) {
+        it.grazed = true; gs.grazeCount++;
+        const gPts = Math.round(500 * gs.combo * (gs.badTrip ? 2.5 : 1));
+        gs.score += gPts; chargeSkill(28); spawnParticles(it.x, it.y, "#ffe600", 8);
+        playSFX(950, 1480, 0.08, 'sine');
+        addFloatText(`⚡ GRAZE! +${gPts} (MP+28%)`, it.x, playerY - 30, "#ffe600");
+        markHUD();
+      }
     }
     if (it.y > height + 50) gs.items.splice(i, 1);
   }
 
+  // 粒子
   for (let i = gs.particles.length - 1; i >= 0; i--) {
-    const p = gs.particles[i]; p.x += p.vx; p.y += p.vy; p.alpha -= 0.032;
-    ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(0, p.alpha);
+    const p = gs.particles[i];
+    p.x += p.vx * dt; p.y += p.vy * dt; p.alpha -= 0.032 * dt;
+    if (p.alpha <= 0) { gs.particles.splice(i, 1); continue; }
+    ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color;
     ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 1.0; if (p.alpha <= 0) gs.particles.splice(i, 1);
   }
+  ctx.globalAlpha = 1;
 
+  // 光子砲
   for (let i = gs.lasers.length - 1; i >= 0; i--) {
     const ls = gs.lasers[i];
-    ctx.strokeStyle = `rgba(255, 230, 0, ${ls.alpha})`; ctx.lineWidth = 12;
+    ctx.strokeStyle = `rgba(255, 230, 0, ${Math.max(0, ls.alpha)})`; ctx.lineWidth = 12;
     ctx.beginPath(); ctx.moveTo(ls.x1, ls.y1); ctx.lineTo(ls.x2, ls.y2); ctx.stroke();
-    ls.alpha -= 0.06; if (ls.alpha <= 0) gs.lasers.splice(i, 1);
+    ls.alpha -= 0.06 * dt; if (ls.alpha <= 0) gs.lasers.splice(i, 1);
   }
 
+  // 點擊漣漪（讓玩家立刻知道輸入有被接收）
+  for (let i = gs.ripples.length - 1; i >= 0; i--) {
+    const rp = gs.ripples[i];
+    rp.r += 4 * dt; rp.alpha -= 0.06 * dt;
+    if (rp.alpha <= 0) { gs.ripples.splice(i, 1); continue; }
+    ctx.strokeStyle = `rgba(0, 243, 255, ${rp.alpha})`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2); ctx.stroke();
+  }
+
+  // 玩家與分身
+  const avatarSpr = getEmojiSprite(AVATAR_ICONS[cfg.avatar], 54, gs.badTrip ? '#ff0033' : '#00f3ff');
   cloneOffsets.forEach(off => {
-    ctx.save(); ctx.translate(gs.playerX + off, playerY);
-    if (off !== 0) ctx.globalAlpha = 0.55;
-    const tilt = (gs.targetX - gs.playerX) * 0.0045;
-    ctx.rotate(Math.max(-0.48, Math.min(0.48, tilt)));
-    ctx.strokeStyle = t < gs.invincibleUntil ? "#ffe600" : (gs.badTrip ? "#ff0044" : "#00f3ff");
+    ctx.save();
+    ctx.translate(gs.playerX + off, playerY);
+    let a = off !== 0 ? 0.55 : 1;
+    if (off === 0 && now < gs.hurtUntil) a *= (Math.floor(now / 80) % 2) ? 0.35 : 1;
+    ctx.globalAlpha = a;
+    ctx.rotate(clamp((gs.targetX - gs.playerX) * 0.0045, -0.48, 0.48));
+    ctx.strokeStyle = now < gs.invincibleUntil ? "#ffe600" : (gs.badTrip ? "#ff0044" : "#00f3ff");
     ctx.lineWidth = 3 + beatPulse * 3;
     ctx.beginPath(); ctx.arc(0, 0, 38 + beatPulse * 6, 0, Math.PI * 2); ctx.stroke();
-    ctx.shadowColor = gs.badTrip ? "#ff0033" : "#00f3ff"; ctx.shadowBlur = 25;
-    ctx.font = "54px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText(AVATAR_ICONS[cfg.avatar], 0, 0);
+    drawSprite(avatarSpr, 0, 0);
     ctx.restore();
   });
 
-  for (let i = gs.floatingTexts.length - 1; i >= 0; i--) {
-    const ft = gs.floatingTexts[i]; ft.y += ft.vy; ft.alpha -= 0.022;
-    ctx.save(); ctx.font = "bold 19px sans-serif"; ctx.fillStyle = ft.color;
-    ctx.globalAlpha = Math.max(0, ft.alpha); ctx.textAlign = "center";
-    ctx.fillText(ft.text, ft.x, ft.y); ctx.restore();
-    if (ft.alpha <= 0) gs.floatingTexts.splice(i, 1);
+  // Bad Trip：預先算好的暈影疊圖，取代全螢幕 CSS filter
+  const wasBad = gs.badTrip;
+  gs.badTrip = gs.vibe < 35;
+  if (wasBad !== gs.badTrip) markHUD();
+  if (gs.badTrip && badTripVignette) {
+    ctx.globalAlpha = 0.65 + beatPulse * 0.35;
+    ctx.drawImage(badTripVignette, 0, 0);
+    ctx.globalAlpha = 1;
   }
 
-  if (gs.active && !gs.paused) requestAnimationFrame(renderLoop);
+  // 浮動文字
+  ctx.font = "bold 19px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  for (let i = gs.floatingTexts.length - 1; i >= 0; i--) {
+    const ft = gs.floatingTexts[i];
+    ft.y += ft.vy * dt; ft.alpha -= 0.022 * dt;
+    if (ft.alpha <= 0) { gs.floatingTexts.splice(i, 1); continue; }
+    ctx.globalAlpha = ft.alpha; ctx.fillStyle = ft.color;
+    ctx.fillText(ft.text, ft.x, ft.y);
+  }
+  ctx.globalAlpha = 1;
+
+  // --- 幀尾結算：死亡 → 勝利 → 換關 ---
+  if (gs.vibe <= 0) { gs.vibe = 0; endGame(false); return; }
+  if (gs.pendingVictory) { endGame(true); return; }
+  if (gs.pendingStage >= 0) setupStage(gs.pendingStage);
 }
 
+function handleCatch(it, meta, thcMult, diffMult) {
+  const badBonus = gs.badTrip ? 2.5 : 1.0;
+  if (it.type === 'good') {
+    const pts = Math.round(100 * gs.combo * thcMult * diffMult * badBonus * (it.bonus ? 2 : 1));
+    gs.score += pts;
+    gs.combo = Math.min(16, gs.combo + 1);
+    gs.maxCombo = Math.max(gs.maxCombo, gs.combo);
+    gs.vibe = Math.min(100, gs.vibe + 4);
+    gs.lastGoodAt = gs.now;
+    chargeSkill(14);
+    spawnParticles(it.x, it.y, it.bonus ? "#ffe600" : "#00f3ff", 16);
+    playSFX(440 + gs.combo * 32, 880 + gs.combo * 40, 0.11, 'sine');
+    addFloatText(`+${pts}${gs.badTrip ? ' (2.5x!)' : ''}`, it.x, it.y, "#00f3ff");
+    if (meta.goalType !== 'boss') advanceStage(it.bonus || 1);
+  } else if (it.type === 'star') {
+    gs.score += 1200 * gs.combo;
+    gs.lastStarAt = gs.now;
+    gs.lasers.push({ x1: gs.playerX, y1: layout.playerY, x2: gs.bossX, y2: layout.bossY, alpha: 1.0 });
+    gs.screenShake = 10; chargeSkill(25); spawnParticles(gs.bossX, layout.bossY, "#ffe600", 28);
+    playSFX(620, 1550, 0.25, 'sawtooth');
+    addFloatText("💥 PHOTON CANNON! (-25% HP)", gs.bossX, layout.bossY + 55, "#ffe600");
+    advanceStage(25);
+  } else if (it.type === 'cbd') {
+    gs.vibe = Math.min(100, gs.vibe + 32); gs.score += 600; chargeSkill(20);
+    flashScreen("#00ff66"); spawnParticles(it.x, it.y, "#00ff66", 20);
+    playSFX(523, 1046, 0.22, 'triangle');
+    addFloatText("🌿 CBD +32% VIBE!", it.x, it.y, "#00ff66");
+  }
+  markHUD();
+}
+
+function drawFrameStatic() {
+  ctx.fillStyle = "#05010e";
+  ctx.fillRect(0, 0, width, height);
+}
+function drawPausedOverlay() {
+  ctx.save();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(4, 1, 10, 0.55)';
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 24px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(I18N[curLang].pausedText, width / 2, height / 2);
+  ctx.restore();
+}
+
+// ==================== 6. 初始化 ====================
+window.addEventListener('resize', resize);
+resize();
 applyTranslations();
 </script>
 </body>
 </html>
-```
