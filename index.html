@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<!-- 關鍵設定：傳送正確的來源網域給 YouTube，解決 Error 153 -->
-<meta name="referrer" content="strict-origin-when-cross-origin">
-<title>CyberTrip 4.0: The Akashic Ascension (Global Edition)</title>
+<title>CyberTrip 4.0: The Akashic Ascension (Global Radio Edition)</title>
 <style>
   :root {
     --cyan: #00f3ff;
@@ -64,18 +62,18 @@
     z-index: 6;
   }
 
-  /* 賽博敘事電台橫幅 */
+  /* 賽博敘事電台橫幅 (位於上方中央，不擋下方移動視線) */
   #narrativeBanner {
     position: absolute;
-    top: 112px;
+    top: 118px;
     left: 50%;
     transform: translateX(-50%);
     background: rgba(12, 4, 28, 0.9);
     border: 1px solid var(--cyan);
     border-left: 5px solid var(--pink);
-    padding: 10px 22px;
+    padding: 9px 20px;
     border-radius: 10px;
-    font-size: 0.94rem;
+    font-size: 0.92rem;
     color: #fff;
     z-index: 18;
     pointer-events: none;
@@ -87,37 +85,7 @@
   }
   #narrativeBanner.show {
     opacity: 1;
-    transform: translateX(-50%) translateY(8px);
-  }
-
-  /* 左下角迷你 YouTube 賽博電台視窗 */
-  #ytRadioWidget {
-    position: absolute;
-    bottom: 65px;
-    left: 16px;
-    width: 220px;
-    background: rgba(10, 4, 24, 0.92);
-    border: 1px solid var(--pink);
-    border-radius: 10px;
-    padding: 6px;
-    z-index: 22;
-    display: none;
-    box-shadow: 0 0 18px rgba(255, 0, 127, 0.4);
-  }
-  .yt-header {
-    font-size: 0.72rem;
-    color: var(--cyan);
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 4px;
-    font-weight: bold;
-  }
-  #ytPlayerContainer {
-    width: 100%;
-    height: 100px;
-    border-radius: 6px;
-    overflow: hidden;
-    background: #000;
+    transform: translateX(-50%) translateY(6px);
   }
 
   /* 選單與彈窗系統 */
@@ -239,20 +207,6 @@
     font-weight: bold;
     box-shadow: 0 0 12px rgba(0, 255, 102, 0.35);
   }
-  .custom-yt-row {
-    display: flex;
-    gap: 6px;
-    margin-top: 8px;
-  }
-  .yt-input {
-    flex: 1;
-    background: #0a0414;
-    border: 1px solid #4a2c82;
-    color: #fff;
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 0.78rem;
-  }
   .launch-btn {
     width: 100%;
     padding: 13px;
@@ -269,7 +223,7 @@
   }
   .launch-btn:hover { transform: scale(1.02); }
 
-  /* 遊戲內 HUD 抬頭顯示器 */
+  /* 遊戲內頂部 HUD 抬頭顯示器 (整合電台迷你狀態列，完全不擋下方視野！) */
   #hud {
     position: absolute;
     top: 10px;
@@ -307,8 +261,8 @@
   }
   .mission-card {
     flex: 1;
-    min-width: 240px;
-    max-width: 430px;
+    min-width: 230px;
+    max-width: 420px;
     text-align: center;
     background: rgba(18, 6, 38, 0.88);
     border: 2px solid var(--yellow);
@@ -322,7 +276,7 @@
     font-weight: bold;
   }
   .mission-text {
-    font-size: 0.95rem;
+    font-size: 0.94rem;
     font-weight: bold;
     color: var(--yellow);
     margin: 3px 0;
@@ -341,29 +295,60 @@
     transition: width 0.2s;
   }
 
-  /* 底部技能充能列 */
+  /* 整合在右上角 HUD 內的極簡電台控制條 */
+  .hud-radio-pill {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 5px;
+    padding-top: 5px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 0.73rem;
+    color: var(--green);
+    pointer-events: auto;
+  }
+  .mini-ctrl-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border: 1px solid rgba(0, 243, 255, 0.4);
+    border-radius: 5px;
+    padding: 2px 7px;
+    cursor: pointer;
+    font-size: 0.72rem;
+    transition: 0.15s;
+  }
+  .mini-ctrl-btn:hover {
+    background: var(--cyan);
+    color: #000;
+  }
+
+  /* 底部技能充能列 (極簡單行膠囊，位於正下方邊緣，左右完全淨空) */
   #bottomBar {
     position: absolute;
-    bottom: 14px;
+    bottom: 12px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(8, 3, 18, 0.88);
-    border: 1px solid var(--cyan);
-    padding: 7px 18px;
+    background: rgba(8, 3, 18, 0.82);
+    border: 1px solid rgba(0, 243, 255, 0.45);
+    padding: 5px 14px;
     border-radius: 30px;
-    font-size: 0.84rem;
+    font-size: 0.8rem;
     z-index: 20;
     display: none;
     pointer-events: auto;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     white-space: nowrap;
+  }
+  @media (max-width: 600px) {
+    #bottomHintText { display: none; }
   }
   .skill-btn {
     background: #2a1842;
     color: #999;
     border: 1px solid #555;
-    padding: 6px 16px;
+    padding: 5px 15px;
     border-radius: 20px;
     font-weight: bold;
     cursor: pointer;
@@ -378,7 +363,7 @@
   }
   @keyframes pulseBtn {
     from { transform: scale(1); }
-    to { transform: scale(1.07); }
+    to { transform: scale(1.06); }
   }
 
   .modal-box {
@@ -411,42 +396,42 @@
   <!-- 動態故事電台字幕 -->
   <div id="narrativeBanner">📻 [Subconscious Radio]: Initializing...</div>
 
-  <!-- 左下角迷你 YouTube 電台視窗 -->
-  <div id="ytRadioWidget">
-    <div class="yt-header">
-      <span id="ytWidgetTitle">📻 YOUTUBE CYBER RADIO</span>
-      <span style="cursor:pointer; color:var(--pink);" onclick="toggleYtMinimize()">[_]</span>
-    </div>
-    <div id="ytPlayerContainer">
-      <div id="ytPlayer"></div>
-    </div>
-  </div>
+  <!-- 隱藏的全球網路電台播放器 (0% 視覺遮擋) -->
+  <audio id="globalRadioPlayer" preload="none" style="display:none;"></audio>
 
-  <!-- 隱藏的本地音檔播放器 -->
-  <audio id="localAudioPlayer" loop style="display:none;"></audio>
-
-  <!-- 遊戲內 HUD -->
+  <!-- 遊戲內頂部 HUD -->
   <div id="hud">
+    <!-- 左上：心境與狀態 -->
     <div class="hud-card">
-      <div id="tripStatus" style="font-weight:bold; font-size:1rem; color:var(--green);">🌈 HAPPY TRIP</div>
-      <div id="subInfo" style="font-size:0.75rem; color:#bbb;">Sativa | 65% THC</div>
+      <div id="tripStatus" style="font-weight:bold; font-size:0.98rem; color:var(--green);">🌈 HAPPY TRIP</div>
+      <div id="subInfo" style="font-size:0.74rem; color:#bbb;">Sativa | 65% THC</div>
       <div class="bar-bg"><div class="bar-fill" id="vibeBar"></div></div>
-      <div style="font-size:0.7rem; color:#aaa; margin-top:3px;" id="vibeHint">Vibe Stable</div>
+      <div style="font-size:0.68rem; color:#aaa; margin-top:3px;" id="vibeHint">Vibe Stable</div>
     </div>
 
+    <!-- 中上：階段任務與進度 -->
     <div class="mission-card">
       <div class="stage-badge" id="stageTitle">STAGE 1 / 5</div>
       <div class="mission-text" id="missionDesc">🎯 Mission</div>
       <div class="prog-bar-bg"><div id="stageProgBar"></div></div>
     </div>
 
+    <!-- 右上：分數、系統控制與極簡電台狀態列 -->
     <div class="hud-card" style="text-align:right;">
-      <div style="font-size:1.3rem; font-weight:bold; color:var(--cyan);">SCORE: <span id="scoreVal">0</span></div>
-      <div style="font-size:0.95rem; font-weight:bold; color:var(--yellow);" id="comboVal">🔥 COMBO x1</div>
-      <div style="margin-top:5px; display:flex; gap:6px; justify-content:flex-end; pointer-events:auto;">
-        <button onclick="toggleLanguage()" class="btn-top btn-lang" style="padding:3px 8px; font-size:0.72rem;" id="hudLangBtn">🌐 EN</button>
-        <button onclick="togglePause()" id="pauseBtn" style="background:#1c2541; color:var(--cyan); border:1px solid var(--cyan); border-radius:6px; padding:3px 9px; cursor:pointer; font-size:0.75rem;">⏸️ [P]</button>
-        <button onclick="quitToMenu()" id="labBackBtn" style="background:#2b1442; color:#fff; border:1px solid var(--pink); border-radius:6px; padding:3px 9px; cursor:pointer; font-size:0.75rem;">🧪 Lab</button>
+      <div style="font-size:1.25rem; font-weight:bold; color:var(--cyan);">SCORE: <span id="scoreVal">0</span></div>
+      <div style="font-size:0.9rem; font-weight:bold; color:var(--yellow);" id="comboVal">🔥 COMBO x1</div>
+      
+      <div style="margin-top:4px; display:flex; gap:5px; justify-content:flex-end; pointer-events:auto;">
+        <button onclick="toggleLanguage()" class="btn-top btn-lang" style="padding:2px 7px; font-size:0.7rem;" id="hudLangBtn">🌐 EN</button>
+        <button onclick="togglePause()" id="pauseBtn" class="mini-ctrl-btn">⏸️ [P]</button>
+        <button onclick="quitToMenu()" id="labBackBtn" class="mini-ctrl-btn" style="border-color:var(--pink);">🧪 Lab</button>
+      </div>
+
+      <!-- 整合式電台膠囊列 (不佔用畫面左下方任何空間) -->
+      <div class="hud-radio-pill">
+        <span id="radioStationLabel">📻 LIVE: Psytrance FM</span>
+        <button class="mini-ctrl-btn" onclick="switchRadioChannel()" id="btnNextStation" title="Switch Channel">⏭️</button>
+        <button class="mini-ctrl-btn" onclick="toggleMuteAudio()" id="btnMuteAudio" title="Mute/Unmute">🔊</button>
       </div>
     </div>
   </div>
@@ -482,27 +467,18 @@
           </div>
 
           <div class="step-box">
-            <span class="step-title" id="lblStep2">2. 音樂音源與曲風電台 (支援 YouTube 串流 / MP3 / 合成器)</span>
+            <span class="step-title" id="lblStep2">2. 全球 24/7 電音直播電台 (點火即播・免版權阻擋)</span>
             <div class="btn-row" style="margin-bottom:7px;">
-              <div class="opt-btn active" onclick="setAudioMode('yt',this)" id="btnModeYt"></div>
-              <div class="opt-btn" onclick="setAudioMode('mp3',this)" id="btnModeMp3"></div>
+              <div class="opt-btn active" onclick="setAudioMode('radio',this)" id="btnModeRadio"></div>
               <div class="opt-btn" onclick="setAudioMode('synth',this)" id="btnModeSynth"></div>
             </div>
 
-            <!-- 曲風頻道選擇 -->
+            <!-- 四大曲風全球電台選擇 -->
             <div class="btn-row">
-              <div class="opt-btn active" onclick="setGenre('psytrance',this)" id="btnPsy">🛸 <b>Psytrance</b><br><small>145BPM Mix</small></div>
-              <div class="opt-btn" onclick="setGenre('cyberpunk',this)" id="btnCyber">🦾 <b>Cyberpunk</b><br><small>Darksynth</small></div>
-              <div class="opt-btn" onclick="setGenre('indie',this)" id="btnIndie">🌸 <b>Psych Indie</b><br><small>Synth Chill</small></div>
-              <div class="opt-btn" onclick="setGenre('techno',this)" id="btnTechno">⚙️ <b>Acid Techno</b><br><small>303 Rave</small></div>
-            </div>
-
-            <!-- 自訂 YouTube 連結或上傳 MP3 列 -->
-            <div class="custom-yt-row" id="ytInputRow">
-              <input type="text" class="yt-input" id="customYtUrl" placeholder="貼上任何 YouTube 網址或 Video ID (留空則播放精選頻道)">
-            </div>
-            <div class="custom-yt-row" id="mp3InputRow" style="display:none;">
-              <input type="file" accept="audio/*" class="yt-input" id="mp3FileInput" onchange="loadLocalMp3(this)">
+              <div class="opt-btn active" onclick="setGenre('psytrance',this)" id="btnPsy">🛸 <b>Psytrance</b><br><small>Hirschmilch / Goa</small></div>
+              <div class="opt-btn" onclick="setGenre('cyberpunk',this)" id="btnCyber">🦾 <b>Cyberpunk</b><br><small>Nightride Darksynth</small></div>
+              <div class="opt-btn" onclick="setGenre('indie',this)" id="btnIndie">🌸 <b>Psych Indie</b><br><small>SomaFM Indie/Lush</small></div>
+              <div class="opt-btn" onclick="setGenre('techno',this)" id="btnTechno">⚙️ <b>Acid Techno</b><br><small>CLIQhop / Rave</small></div>
             </div>
           </div>
 
@@ -578,9 +554,6 @@
   </div>
 </div>
 
-<!-- 載入官方 YouTube IFrame API -->
-<script src="https://www.youtube.com/iframe_api"></script>
-
 <script>
 // ==================== 1. 雙語字典系統 (i18n Localization) ====================
 let curLang = 'zh';
@@ -594,11 +567,9 @@ const I18N = {
     sativa: "🌿 <b>Sativa</b><br><small>極速靈敏・高頻共振</small>",
     indica: "🍂 <b>Indica</b><br><small>液態慢速・波浪呼吸</small>",
     hybrid: "⚡ <b>Hybrid</b><br><small>動靜雙重・量子變速</small>",
-    step2: "2. 音樂音源與曲風電台 (支援 YouTube 串流 / MP3 / 合成器)",
-    modeYt: "📺 <b>YouTube 電台</b><br><small>真實電音串流</small>",
-    modeMp3: "📂 <b>載入本地 MP3</b><br><small>自選音檔共振</small>",
-    modeSynth: "🎹 <b>Web 合成器</b><br><small>離線即時生成</small>",
-    ytPlaceholder: "貼上任何 YouTube 網址或 Video ID (留空則自動播放上方精選曲風電台)",
+    step2: "2. 全球 24/7 電音直播電台 (點火即播・免版權阻擋)",
+    modeRadio: "📻 <b>Global 直播電台</b><br><small>24/7 全球真實電音串流</small>",
+    modeSynth: "🎹 <b>內建 Web 合成器</b><br><small>零延遲離線程序電音</small>",
     step3: "3. 難易度與維度深度 (Difficulty)",
     easy: "🌱 <b>微醺新手</b><br><small>3 階段輕鬆體驗</small>",
     normal: "🚀 <b>迷幻潛行者</b><br><small>完整 5 階段+Boss</small>",
@@ -615,10 +586,10 @@ const I18N = {
     quantum: "🌌 <b>量子發酵</b><br><small>開局自帶 4x 連擊倍率</small>",
     launch: "🔥 點火發酵！展開 5 大維度飛升之旅",
     hudLab: "🧪 煉金室",
-    pause: "⏸️ 暫停 [P]",
-    resume: "▶️ 繼續 [P]",
+    pause: "⏸️ [P]",
+    resume: "▶️ [P]",
     bottomHint: "🖱️ 滑鼠/手指移動閃避 ｜ 貼近 👁️ 魔眼觸發 <b>GRAZE 擦彈充能</b>",
-    skillCharging: (pct) => `⚡ 技能充能中 (${pct}%)`,
+    skillCharging: (pct) => `⚡ 技能充能 (${pct}%)`,
     skillReady: "⚡ [空白鍵] 釋放角色大招 (MAX!)",
     happyTrip: "🌈 HAPPY TRIP (高維共振漫遊)",
     badTrip: "👁️ BAD TRIP (狂暴 2.5x 得分加成中！)",
@@ -628,7 +599,7 @@ const I18N = {
     guideTitle: "📖 《CyberTrip 4.0》設計師指南與世界觀",
     guideSec1: "<b>🌌 故事背景：2142 阿卡西飛升計畫</b><br>賽博巨企「OmniCorp」用演算法封鎖了全宇宙生物的夢境。你是一隻覺醒的邊境牧羊犬（或折耳貓、外星潛行者），在吸食禁忌的量子草本後進入 <b>Hyper Flying Trip</b>！你必須穿越 5 個物理規則截然不同的時空維度，並擊敗最終心魔 Boss「妄想全視之眼」，解放宇宙意識！",
     guideSec2: "<b>🌀 5 大維度專屬空間機制</b><br>• <b>Stage 1 (霓虹地平線)：</b> 熟悉流體操控與擦彈充能。<br>• <b>Stage 2 (液態正弦波海)：</b> 掉落物會隨音波<b>左右蛇行漂移</b>！<br>• <b>Stage 3 (六邊形引力矩陣)：</b> 中心產生<b>引力脈衝</b>，將物體拉向中央！<br>• <b>Stage 4 (萬花筒鏡像維度)：</b> 啟動<b>雙重鏡像分身</b>幫忙接球！<br>• <b>Stage 5 (阿卡西奇點 Boss 戰)：</b> 閃避<b>紅色死亡雷射預警線</b>，撿取「🌟星辰種子」發射光子砲轟爆魔眼！",
-    guideSec3: "<b>🎧 YouTube 電台與高手技巧</b><br>• <b>自選 YouTube 音樂：</b> 部署至 GitHub Pages 後，可直接使用內建 4 大曲風 YouTube 電台，或貼上任何無版權封鎖的 YouTube DJ Mix 網址！<br>• <b>Graze 擦彈充能：</b> 貼著 👁️ 魔眼邊緣閃過可獲高分並快速充滿 MP 釋放大招！",
+    guideSec3: "<b>📻 全球 24/7 電音直播電台 & 高手技巧</b><br>• <b>Global Radio 直連：</b> 內建歐美知名地下電音網路電台（Hirschmilch、Nightride FM、SomaFM），點火直接串流播放，右上角 HUD 可隨時切台（⏭️）或靜音！<br>• <b>Graze 擦彈充能：</b> 貼著 👁️ 魔眼邊緣閃過可獲 +500 分並快速充滿 MP 釋放大招！",
     guideClose: "✅ 準備就緒，返回煉金室",
     winTitle: "🌌 飛升成功：突破阿卡西奇點！",
     winDesc: "你粉碎了妄想全視之眼，成功將自由夢境帶回全宇宙！",
@@ -688,11 +659,9 @@ const I18N = {
     sativa: "🌿 <b>Sativa</b><br><small>Hyper Speed & Agile</small>",
     indica: "🍂 <b>Indica</b><br><small>Liquid Slow & Wave</small>",
     hybrid: "⚡ <b>Hybrid</b><br><small>Dynamic Shift</small>",
-    step2: "2. Audio Engine & Radio (YouTube Stream / MP3 / Synth)",
-    modeYt: "📺 <b>YouTube Radio</b><br><small>Real DJ Mix Stream</small>",
-    modeMp3: "📂 <b>Local MP3 File</b><br><small>Custom Audio Sync</small>",
-    modeSynth: "🎹 <b>Web Synth</b><br><small>Offline Procedural</small>",
-    ytPlaceholder: "Paste any YouTube URL or Video ID (Leave blank for curated genre radio)",
+    step2: "2. 24/7 Global Electronic Radio (Instant Stream, No Copyright Blocks)",
+    modeRadio: "📻 <b>Global Live Radio</b><br><small>24/7 Real Underground Streams</small>",
+    modeSynth: "🎹 <b>Built-in Web Synth</b><br><small>Offline Procedural Audio</small>",
     step3: "3. Trip Intensity (Difficulty & Length)",
     easy: "🌱 <b>Micro-dose</b><br><small>3 Stages Chill Run</small>",
     normal: "🚀 <b>Psychonaut</b><br><small>5 Stages + Boss</small>",
@@ -709,10 +678,10 @@ const I18N = {
     quantum: "🌌 <b>Quantum Cure</b><br><small>Start at 4x Combo</small>",
     launch: "🔥 Ignite & Ascend! Launch 5-Dimension Trip",
     hudLab: "🧪 Lab",
-    pause: "⏸️ Pause [P]",
-    resume: "▶️ Resume [P]",
+    pause: "⏸️ [P]",
+    resume: "▶️ [P]",
     bottomHint: "🖱️ Move/Touch to Dodge ｜ Graze near 👁️ for <b>Bonus MP!</b>",
-    skillCharging: (pct) => `⚡ Skill Charging (${pct}%)`,
+    skillCharging: (pct) => `⚡ Charging (${pct}%)`,
     skillReady: "⚡ [SPACE] UNLEASH ULTIMATE (MAX!)",
     happyTrip: "🌈 HAPPY TRIP (High-Vibe Cruising)",
     badTrip: "👁️ BAD TRIP (2.5x Bloodlust Multiplier!)",
@@ -722,14 +691,14 @@ const I18N = {
     guideTitle: "📖 CyberTrip 4.0: Psychonaut's Manual & Lore",
     guideSec1: "<b>🌌 Lore: The 2142 Akashic Ascension</b><br>Mega-corp 'OmniCorp' has locked all sentient dreams behind a neural firewall. As an awakened Border Collie (or Cyber Cat / Psychonaut), you ignite forbidden quantum herbs to enter a <b>Hyper Flying Trip</b>! Blast through 5 distinct dimensional laws and shatter the final boss—The All-Seeing Paranoia Eye!",
     guideSec2: "<b>🌀 5 Dimensional Stage Mechanics</b><br>• <b>Stage 1 (Neon Horizon):</b> Master fluid movement and Graze charging.<br>• <b>Stage 2 (Sine-Wave Ocean):</b> Falling orbs <b>snake left & right</b> with the soundwaves!<br>• <b>Stage 3 (Hex Gravity Matrix):</b> A central singularity pulls objects toward the middle!<br>• <b>Stage 4 (Mandala Mirror):</b> Summon <b>Twin Mirror Clones</b> to catch orbs across lanes!<br>• <b>Stage 5 (The Paranoia Eye Boss):</b> Dodge <b>Red Telegraphed Lasers</b> and grab 🌟 Star Seeds to fire photon cannons!",
-    guideSec3: "<b>🎧 YouTube Cyber Radio & Pro Tips</b><br>• <b>Custom YouTube Stream:</b> Pick our curated genre channels or paste ANY embed-friendly YouTube DJ Mix URL to fly to your favorite tracks!<br>• <b>Graze to Charge:</b> Skim closely past 👁️ Dark Eyes without touching them for +500 pts and +28% MP!",
+    guideSec3: "<b>📻 24/7 Global Cyber Radio & Pro Tips</b><br>• <b>Live Underground Radio:</b> Streams real 24/7 Psytrance, Cyberpunk Darksynth, Psych Indie, and Acid Techno stations (Hirschmilch, Nightride FM, SomaFM) with top-right HUD controls!<br>• <b>Graze to Charge:</b> Skim closely past 👁️ Dark Eyes without touching them for +500 pts and +28% MP!",
     guideClose: "✅ Got It, Back to Dispensary Lab",
     winTitle: "🌌 ASCENSION COMPLETE: SINGULARITY BREACHED!",
     winDesc: "You shattered the Paranoia Eye and freed the cosmic consciousness!",
     loseTitle: "🛋️ COUCH-LOCKED: CONSCIOUSNESS PETRIFIED!",
     loseDesc: "The paranoia eyes overwhelmed your vibe. Try 60-Day Cured or lower THC%!",
     finalScoreLbl: "Final Score: ",
-    retryBtn: "🔄 Back to Lab, Try New Recipe & Track",
+    retryBtn: "🔄 Back to Lab, Try New Recipe & Station",
     stages: [
       { name: "STAGE 1: Neon Cyber Horizon", desc: (c,m) => `🎯 Mission: Collect Dopamine Orbs (${c}/${m})` },
       { name: "STAGE 2: Liquid Sine-Wave Ocean", desc: (c,m) => `🌊 Mechanic: Slithering Orbs! Collect (${c}/${m})` },
@@ -789,10 +758,8 @@ function applyTranslations() {
   document.getElementById('btnHybrid').innerHTML = t.hybrid;
 
   document.getElementById('lblStep2').innerText = t.step2;
-  document.getElementById('btnModeYt').innerHTML = t.modeYt;
-  document.getElementById('btnModeMp3').innerHTML = t.modeMp3;
+  document.getElementById('btnModeRadio').innerHTML = t.modeRadio;
   document.getElementById('btnModeSynth').innerHTML = t.modeSynth;
-  document.getElementById('customYtUrl').placeholder = t.ytPlaceholder;
 
   document.getElementById('lblStep3').innerText = t.step3;
   document.getElementById('btnEasy').innerHTML = t.easy;
@@ -836,10 +803,10 @@ function toggleLanguage() {
   applyTranslations();
 }
 
-// ==================== 2. 遊戲設定與 YouTube 電台串流系統 ====================
+// ==================== 2. 全球 24/7 四大曲風直播電台系統 (Global Live Radio) ====================
 const cfg = {
   strain: 'sativa',
-  audioMode: 'yt',
+  audioMode: 'radio', // 'radio' 或 'synth'
   genre: 'psytrance',
   diff: 'normal',
   avatar: 'dog',
@@ -847,92 +814,54 @@ const cfg = {
   cure: 'aged'
 };
 
-// 精選允許外部網頁 Embed 嵌入的音樂頻道與長版混音 Video IDs
-const YT_CHANNELS = {
-  psytrance: 'xw3C03Ba8Dk', // Astrix - Deep Jungle Walk
-  cyberpunk: 'Y8DekFFCE5c', // Perturbator / Cyberpunk Darksynth
-  indie:     '8GW6sLrK40k', // HOME - Resonance
-  techno:    '4xDzrJKXOOY'  // Synthwave / Electronic Radio
+// 每個曲風配置多個全球公開 HTTPS Icecast 直播電台源 (支援切換與斷線自動備援)
+const GLOBAL_RADIOS = {
+  psytrance: [
+    { name: "Hirschmilch Psytrance FM", url: "https://hirschmilch.de:7001/psytrance.mp3" },
+    { name: "SomaFM: Suburbs of Goa",   url: "https://ice1.somafm.com/suburbsofgoa-128-mp3" }
+  ],
+  cyberpunk: [
+    { name: "Nightride FM (Cyberpunk)", url: "https://stream.nightride.fm/nightride.m4a" },
+    { name: "SomaFM: DEF CON Radio",    url: "https://ice1.somafm.com/defcon-128-mp3" },
+    { name: "Chillsynth FM",            url: "https://stream.nightride.fm/chillsynth.m4a" }
+  ],
+  indie: [
+    { name: "SomaFM: Indie Pop Rocks!", url: "https://ice1.somafm.com/indiepop-128-mp3" },
+    { name: "SomaFM: Lush Dream",       url: "https://ice1.somafm.com/lush-128-mp3" },
+    { name: "SomaFM: Groove Salad",     url: "https://ice1.somafm.com/groovesalad-128-mp3" }
+  ],
+  techno: [
+    { name: "Hirschmilch Electronic",   url: "https://hirschmilch.de:7001/electronic.mp3" },
+    { name: "SomaFM: CLIQhop IDM",      url: "https://ice1.somafm.com/cliqhop-128-mp3" },
+    { name: "SomaFM: Dub Step Beyond",  url: "https://ice1.somafm.com/dubstep-128-mp3" }
+  ]
 };
 
-let ytPlayer = null;
-let ytReady = false;
-let ytMinimized = false;
-
-function onYouTubeIframeAPIReady() {
-  const playerVars = {
-    'autoplay': 0,
-    'controls': 1,
-    'rel': 0,
-    'playsinline': 1
-  };
-  if (window.location.protocol.startsWith('http')) {
-    playerVars.origin = window.location.origin;
-  }
-
-  ytPlayer = new YT.Player('ytPlayer', {
-    height: '100',
-    width: '100%',
-    videoId: YT_CHANNELS.psytrance,
-    playerVars: playerVars,
-    events: {
-      'onReady': () => { ytReady = true; },
-      'onError': (e) => {
-        console.warn("YouTube Embed Error (" + e.data + "), auto-switching to Web Synth fallback.");
-        if (gs.active) {
-          if (musicInterval) clearInterval(musicInterval);
-          startWebSynthLoop();
-        }
-      }
-    }
-  });
-}
-
-function extractYouTubeId(input) {
-  if (!input) return null;
-  const trimmed = input.trim();
-  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
-  const match = trimmed.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([a-zA-Z0-9_-]{11})/);
-  return match ? match[1] : null;
-}
+let currentStationIdx = 0;
+let isAudioMuted = false;
 
 function setAudioMode(mode, el) {
   cfg.audioMode = mode;
   Array.from(el.parentElement.children).forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('ytInputRow').style.display = mode === 'yt' ? 'flex' : 'none';
-  document.getElementById('mp3InputRow').style.display = mode === 'mp3' ? 'flex' : 'none';
 }
 
 function setGenre(g, el) {
   cfg.genre = g;
+  currentStationIdx = 0;
   Array.from(el.parentElement.children).forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-}
-
-function toggleYtMinimize() {
-  ytMinimized = !ytMinimized;
-  document.getElementById('ytPlayerContainer').style.display = ytMinimized ? 'none' : 'block';
-}
-
-let localMp3Url = null;
-function loadLocalMp3(input) {
-  if (input.files && input.files[0]) {
-    localMp3Url = URL.createObjectURL(input.files[0]);
-    document.getElementById('localAudioPlayer').src = localMp3Url;
-  }
 }
 
 const STAGE_META = [
   { id: 1, bgType: "cyber_grid", c1: "#ff007f", c2: "#00f3ff", goalType: "orbs", baseTarget: 7 },
   { id: 2, bgType: "sine_wave",  c1: "#00ffaa", c2: "#ffe600", goalType: "orbs", baseTarget: 9 },
-  { id: 3, bgType: "hex_tunnel", c1: "#00ff44", c2: "#8a2be2", goalType: "orbs", baseTarget: 11 },
+  { id: 3, bgType: "hex_tunnel", c1: "#00ffaa", c2: "#8a2be2", goalType: "orbs", baseTarget: 11 },
   { id: 4, bgType: "mandala",    c1: "#ffaa00", c2: "#ff00aa", goalType: "orbs", baseTarget: 14 },
   { id: 5, bgType: "boss_void",  c1: "#ff0033", c2: "#00f3ff", goalType: "boss", baseTarget: 100 }
 ];
 
 const AVATAR_ICONS = { dog: "🐶", cat: "🐱", human: "🧑‍🚀", alien: "👽" };
-
 let savedHighScore = parseInt(localStorage.getItem('cybertrip_best') || '0');
 
 function setCfg(key, val, el) {
@@ -968,7 +897,7 @@ function showNarrative(text) {
   setTimeout(() => { banner.classList.remove('show'); }, 4500);
 }
 
-// ==================== 3. 音效與音樂引擎 (YouTube / MP3 / Synth 三合一) ====================
+// ==================== 3. 音效與全球電台引擎 (Global Radio + Web Synth 保底) ====================
 let audioCtx, masterGain, delayNode, musicInterval;
 let arpStep = 0;
 let beatPulse = 0;
@@ -976,7 +905,7 @@ let beatPulse = 0;
 function initAudioSystem() {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   masterGain = audioCtx.createGain();
-  masterGain.gain.value = 0.68;
+  masterGain.gain.value = isAudioMuted ? 0 : 0.68;
 
   delayNode = audioCtx.createDelay();
   delayNode.delayTime.value = 0.25;
@@ -987,39 +916,67 @@ function initAudioSystem() {
   delayNode.connect(masterGain);
   masterGain.connect(audioCtx.destination);
 
-  const ytWidget = document.getElementById('ytRadioWidget');
-  const localAudio = document.getElementById('localAudioPlayer');
-
-  if (cfg.audioMode === 'yt' && window.location.protocol === 'file:') {
-    ytWidget.style.display = 'none';
-    startWebSynthLoop();
-    return;
-  }
-
-  if (cfg.audioMode === 'yt') {
-    ytWidget.style.display = 'block';
-    const customInput = document.getElementById('customYtUrl').value;
-    const vid = extractYouTubeId(customInput) || YT_CHANNELS[cfg.genre];
-    if (ytReady && ytPlayer && ytPlayer.loadVideoById) {
-      ytPlayer.loadVideoById(vid);
-      ytPlayer.playVideo();
-      startVisualBeatClock();
-    } else {
-      startWebSynthLoop();
-    }
-  } else if (cfg.audioMode === 'mp3' && localMp3Url) {
-    ytWidget.style.display = 'none';
-    localAudio.currentTime = 0;
-    localAudio.play();
-    startVisualBeatClock();
+  if (cfg.audioMode === 'radio') {
+    playGlobalRadioStream();
   } else {
-    ytWidget.style.display = 'none';
+    document.getElementById('radioStationLabel').innerText = `🎹 SYNTH: ${cfg.genre.toUpperCase()}`;
     startWebSynthLoop();
   }
 }
 
+function playGlobalRadioStream() {
+  const radioEl = document.getElementById('globalRadioPlayer');
+  const stations = GLOBAL_RADIOS[cfg.genre];
+  const st = stations[currentStationIdx % stations.length];
+
+  document.getElementById('radioStationLabel').innerText = `📻 LIVE: ${st.name}`;
+  radioEl.src = st.url;
+  radioEl.volume = isAudioMuted ? 0 : 0.85;
+
+  if (musicInterval) clearInterval(musicInterval);
+  startVisualBeatClock();
+
+  radioEl.play().catch(err => {
+    console.warn("Radio stream fallback triggered:", err);
+    // 若該電台節點忙碌或被防火牆擋下，自動嘗試同曲風備用台；若仍失敗則無縫啟動合成器保底
+    if (currentStationIdx + 1 < stations.length) {
+      currentStationIdx++;
+      playGlobalRadioStream();
+    } else {
+      document.getElementById('radioStationLabel').innerText = `🎹 SYNTH: ${cfg.genre.toUpperCase()}`;
+      if (musicInterval) clearInterval(musicInterval);
+      startWebSynthLoop();
+    }
+  });
+}
+
+function switchRadioChannel() {
+  if (!gs.active) return;
+  if (cfg.audioMode === 'radio') {
+    const stations = GLOBAL_RADIOS[cfg.genre];
+    currentStationIdx = (currentStationIdx + 1) % stations.length;
+    playGlobalRadioStream();
+  } else {
+    // 若在合成器模式下按切台，直接切換至下一個曲風
+    const genres = ['psytrance', 'cyberpunk', 'indie', 'techno'];
+    cfg.genre = genres[(genres.indexOf(cfg.genre) + 1) % genres.length];
+    document.getElementById('radioStationLabel').innerText = `🎹 SYNTH: ${cfg.genre.toUpperCase()}`;
+    updateHUD();
+  }
+}
+
+function toggleMuteAudio() {
+  isAudioMuted = !isAudioMuted;
+  const radioEl = document.getElementById('globalRadioPlayer');
+  radioEl.volume = isAudioMuted ? 0 : 0.85;
+  if (masterGain) masterGain.gain.value = isAudioMuted ? 0 : 0.68;
+  document.getElementById('btnMuteAudio').innerText = isAudioMuted ? "🔇" : "🔊";
+}
+
 function startVisualBeatClock() {
-  let bpm = cfg.genre === 'psytrance' ? 145 : (cfg.genre === 'cyberpunk' ? 116 : 128);
+  let bpm = cfg.genre === 'psytrance' ? 145 : (cfg.genre === 'cyberpunk' ? 116 : (cfg.genre === 'indie' ? 112 : 136));
+  if (cfg.strain === 'indica') bpm *= 0.85;
+  if (cfg.strain === 'sativa') bpm *= 1.05;
   const beatMs = (60 / bpm) * 1000;
   musicInterval = setInterval(() => {
     if (gs.active && !gs.paused) beatPulse = 1.0;
@@ -1062,11 +1019,9 @@ function startWebSynthLoop() {
 
 function stopAllAudio() {
   if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
-  if (ytReady && ytPlayer && ytPlayer.pauseVideo) {
-    try { ytPlayer.pauseVideo(); } catch(e) {}
-  }
-  const localAudio = document.getElementById('localAudioPlayer');
-  localAudio.pause();
+  const radioEl = document.getElementById('globalRadioPlayer');
+  radioEl.pause();
+  radioEl.src = "";
   if (audioCtx) {
     try { audioCtx.close(); } catch(e) {}
     audioCtx = null;
@@ -1093,7 +1048,7 @@ function playStereoNote(t, f, dur, type, panVal) {
   o.connect(p); p.connect(g); g.connect(masterGain); g.connect(delayNode); o.start(t); o.stop(t + dur + 0.02);
 }
 function playSFX(f1, f2, dur, type = 'sine') {
-  if (!audioCtx || gs.paused) return;
+  if (!audioCtx || gs.paused || isAudioMuted) return;
   const t = audioCtx.currentTime;
   const o = audioCtx.createOscillator(), g = audioCtx.createGain();
   o.type = type; o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(f2, t + dur);
@@ -1153,6 +1108,11 @@ function togglePause() {
   gs.paused = !gs.paused;
   const t = I18N[curLang];
   document.getElementById('pauseBtn').innerText = gs.paused ? t.resume : t.pause;
+  const radioEl = document.getElementById('globalRadioPlayer');
+  if (cfg.audioMode === 'radio') {
+    if (gs.paused) radioEl.pause();
+    else radioEl.play().catch(()=>{});
+  }
   if (!gs.paused) requestAnimationFrame(renderLoop);
 }
 
@@ -1275,7 +1235,6 @@ function updateHUD() {
 function endGame(victory) {
   gs.active = false;
   stopAllAudio();
-  document.getElementById('ytRadioWidget').style.display = 'none';
   canvas.classList.remove('bad-trip-fx', 'wave-indica');
 
   const finalScore = Math.floor(gs.score);
@@ -1311,7 +1270,6 @@ function endGame(victory) {
 function quitToMenu() {
   gs.active = false;
   stopAllAudio();
-  document.getElementById('ytRadioWidget').style.display = 'none';
   canvas.classList.remove('bad-trip-fx', 'wave-indica');
   document.getElementById('hud').style.display = 'none';
   document.getElementById('bottomBar').style.display = 'none';
