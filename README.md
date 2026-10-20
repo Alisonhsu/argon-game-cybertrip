@@ -2,10 +2,10 @@
 
 [![Play Online](https://img.shields.io/badge/🎮_Play_Now-GitHub_Pages-00f3ff?style=for-the-badge)](https://YOUR_GITHUB_USERNAME.github.io/cybertrip/)
 [![Language](https://img.shields.io/badge/🌐_Language-English_%7C_繁體中文-ff007f?style=for-the-badge)](#)
-[![Tech](https://img.shields.io/badge/⚡_Tech-HTML5_Canvas_%7C_Web_Audio_API_%7C_YouTube_API-00ff66?style=for-the-badge)](#)
+[![Audio](https://img.shields.io/badge/📻_Audio-24/7_Global_Genre_Radio_%2B_Web_Synth-00ff66?style=for-the-badge)](#)
 
 > **A Psychedelic Cyber-Runner & Audio-Visual Experience.**  
-> **結合賽博龐克、迷幻電音與多維度物理機制的太空跑酷闖關遊戲。**
+> **結合賽博龐克、24/7 全球前衛音樂電台與多維度物理機制的太空跑酷闖關遊戲。**
 
 ---
 
@@ -21,10 +21,16 @@ Mega-corporation **OmniCorp** has locked all sentient dreams behind an algorithm
 
 ## ✨ Key Features | 核心特色
 
+* 📻 **24/7 Global Genre Radio (全球四大曲風直播電台直連):**
+  * No copyright blocks, no manual searching. Pick your genre and stream live 24/7 underground electronic stations directly inside the game (with built-in Web Synth fallback):
+  * 🛸 **Psytrance:** *Hirschmilch Psytrance / SomaFM Suburbs of Goa*
+  * 🦾 **Cyberpunk:** *Nightride FM Darksynth / SomaFM DEF CON Radio*
+  * 🌸 **Psych Indie:** *SomaFM Indie Pop Rocks! / SomaFM Lush*
+  * ⚙️ **Acid Techno:** *Hirschmilch Electronic / SomaFM CLIQhop*
 * 🧪 **The Cyber Dispensary (煉金配方系統):**
-  * **Genetics (麻草基因):** Choose between **Sativa** (145 BPM hyper-speed), **Indica** (liquid slow-motion & wave distortion), or **Hybrid**.
+  * **Genetics (麻草基因):** **Sativa** (hyper-speed & agile), **Indica** (liquid slow-motion & wave distortion), or **Hybrid**.
   * **THC Potency (濃度拉桿 15%~99%):** Higher THC grants massive score multipliers but increases visual sway and dark matter spawns.
-  * **Curing Process (熟成天賦):** Choose Fresh Bud (+50% MP charge), 60-Day Cured (50% damage reduction), or Quantum Cure (Start at 4x Combo).
+  * **Curing Process (熟成天賦):** Fresh Bud (+50% MP charge), 60-Day Cured (50% damage reduction), or Quantum Cure (Start at 4x Combo).
 * 🐾 **4 Cosmic Avatars & Ultimate Skills (四大角色與專屬大招):**
   * 🐶 **Border Collie (邊境牧羊犬):** *Sonic Bark* — Shatters all dark matter eyes on screen.
   * 🐱 **Cyber Fold Cat (賽博折耳貓):** *Quantum Magnet* — Pulls all orbs and star seeds to your position.
@@ -36,10 +42,6 @@ Mega-corporation **OmniCorp** has locked all sentient dreams behind an algorithm
   * **Stage 3 (Hex Gravity Matrix):** A central singularity pulls objects toward the middle.
   * **Stage 4 (Mandala Mirror):** Summons Twin Mirror Clones to catch orbs across lanes.
   * **Stage 5 (The Paranoia Eye Boss):** Dodge telegraphed red sweep lasers and grab 🌟 Star Seeds to fire photon cannons!
-* 🎧 **Tri-Mode Audio Engine (三合一立體音樂引擎):**
-  * **YouTube Cyber Radio:** Stream curated Psytrance, Cyberpunk Darksynth, Psych Indie, or Acid Techno mixes—or paste any YouTube URL!
-  * **Local MP3 Upload:** Load your own audio files from your device.
-  * **Procedural Web Synth:** Zero-latency built-in Web Audio API synthesizer with stereo panning & ping-pong delay.
 * 🌐 **Bilingual Support (中/英雙語即時切換):** One-click toggle between English and Traditional Chinese (`🌐 EN / 繁中`).
 
 ---
@@ -51,12 +53,3 @@ Mega-corporation **OmniCorp** has locked all sentient dreams behind an algorithm
 * **Pause (暫停):** Press **`[P]`**.
 * **⚡ Graze Mechanic (驚險擦彈):** Skim closely past `👁️ Dark Eyes` without touching them for **`+500 GRAZE`** bonus points and **`+28% MP`** charge!
 * **👁️ Bad Trip Bloodlust (狂暴雙面刃):** Dropping below 35% Vibe triggers a **Bad Trip** (inverted glitch visuals), granting a **2.5x Score Multiplier** at high risk! Grab `🌿 CBD Leaves` to heal.
-
----
-
-## 🚀 How to Deploy on GitHub Pages | 部署教學
-
-1. Clone or fork this repository, or upload `index.html` and `README.md` to a new public GitHub repository.
-2. Go to **Settings** ⚙️ ➔ **Pages** on the left sidebar.
-3. Under **Build and deployment** ➔ **Branch**, select `main` (or `master`) and `/ (root)`, then click **Save**.
-4. Wait ~60 seconds and visit `https://YOUR_GITHUB_USERNAME.github.io/YOUR_REPO_NAME/`!
