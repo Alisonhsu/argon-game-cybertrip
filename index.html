@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- 關鍵設定：傳送正確的來源網域給 YouTube，解決 Error 153 -->
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>CyberTrip 4.0: The Akashic Ascension (Global Edition)</title>
+<style>
+  :root {
+    --cyan: #00f3ff;
+    --pink: #ff007f;
+    --green: #00ff66;
+    --yellow: #ffe600;
+    --purple: #8a2be2;
+    --red: #ff0044;
+  }
+  * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+  body {
+    margin: 0;
+    background: #040109;
+    color: #fff;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+    touch-action: none;
+  }
+  #gameWrapper {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    transition: filter 0.25s;
+  }
+
+  /* 視覺特效層 */
+  .wave-indica { animation: slowBreath 3.5s infinite ease-in-out; }
+  .bad-trip-fx {
+    filter: invert(0.88) hue-rotate(155deg) contrast(1.55) saturate(1.8) !important;
+  }
+  .spin-burst {
+    animation: spinKick 0.42s cubic-bezier(0.17, 0.89, 0.32, 1.49);
+  }
+  @keyframes slowBreath {
+    0%, 100% { transform: scale(1.02) skew(0deg, 0deg); }
+    50% { transform: scale(1.07) skew(1.2deg, -1.2deg); }
+  }
+  @keyframes spinKick {
+    0% { transform: scale(1.38) rotate(18deg); filter: brightness(2.2); }
+    100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.1s;
+    z-index: 6;
+  }
+
+  /* 賽博敘事電台橫幅 */
+  #narrativeBanner {
+    position: absolute;
+    top: 112px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(12, 4, 28, 0.9);
+    border: 1px solid var(--cyan);
+    border-left: 5px solid var(--pink);
+    padding: 10px 22px;
+    border-radius: 10px;
+    font-size: 0.94rem;
+    color: #fff;
+    z-index: 18;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s, transform 0.4s;
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+    text-align: center;
+    max-width: 88vw;
+  }
+  #narrativeBanner.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(8px);
+  }
+
+  /* 左下角迷你 YouTube 賽博電台視窗 */
+  #ytRadioWidget {
+    position: absolute;
+    bottom: 65px;
+    left: 16px;
+    width: 220px;
+    background: rgba(10, 4, 24, 0.92);
+    border: 1px solid var(--pink);
+    border-radius: 10px;
+    padding: 6px;
+    z-index: 22;
+    display: none;
+    box-shadow: 0 0 18px rgba(255, 0, 127, 0.4);
+  }
+  .yt-header {
+    font-size: 0.72rem;
+    color: var(--cyan);
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    font-weight: bold;
+  }
+  #ytPlayerContainer {
+    width: 100%;
+    height: 100px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #000;
+  }
+
+  /* 選單與彈窗系統 */
+  .overlay-screen {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(22, 8, 45, 0.94), rgba(4, 1, 10, 0.98));
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 30;
+    padding: 14px;
+    overflow-y: auto;
+  }
+  .panel {
+    background: rgba(14, 7, 28, 0.96);
+    border: 2px solid var(--cyan);
+    box-shadow: 0 0 45px rgba(0, 243, 255, 0.25), inset 0 0 25px rgba(255, 0, 127, 0.15);
+    border-radius: 18px;
+    max-width: 860px;
+    width: 100%;
+    padding: 18px 24px;
+    max-height: 96vh;
+    overflow-y: auto;
+  }
+  .title-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .main-title {
+    font-size: 1.55rem;
+    margin: 0;
+    background: linear-gradient(90deg, var(--green), var(--cyan), var(--pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .top-btn-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .high-score-tag {
+    font-size: 0.82rem;
+    color: var(--yellow);
+    background: rgba(255, 230, 0, 0.12);
+    border: 1px solid var(--yellow);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+  }
+  .btn-top {
+    background: rgba(0, 243, 255, 0.15);
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    padding: 6px 13px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.82rem;
+    transition: 0.2s;
+  }
+  .btn-top:hover { background: var(--cyan); color: #000; }
+  .btn-lang {
+    background: linear-gradient(45deg, rgba(255,0,127,0.25), rgba(0,243,255,0.25));
+    border: 1px solid var(--pink);
+    color: #fff;
+  }
+  .btn-lang:hover { background: var(--pink); color: #fff; }
+
+  .grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 700px) { .grid-2col { grid-template-columns: 1fr; } }
+
+  .step-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+  .step-title {
+    font-size: 0.86rem;
+    font-weight: bold;
+    color: var(--cyan);
+    margin-bottom: 7px;
+    display: block;
+  }
+  .btn-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
+    gap: 6px;
+  }
+  .opt-btn {
+    background: #150c28;
+    border: 1px solid #3c256e;
+    color: #ccc;
+    padding: 7px 5px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 0.78rem;
+    transition: 0.18s;
+  }
+  .opt-btn:hover { border-color: var(--cyan); }
+  .opt-btn.active {
+    background: linear-gradient(135deg, rgba(0, 243, 255, 0.28), rgba(255, 0, 127, 0.28));
+    border: 2px solid var(--green);
+    color: #fff;
+    font-weight: bold;
+    box-shadow: 0 0 12px rgba(0, 255, 102, 0.35);
+  }
+  .custom-yt-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .yt-input {
+    flex: 1;
+    background: #0a0414;
+    border: 1px solid #4a2c82;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+  }
+  .launch-btn {
+    width: 100%;
+    padding: 13px;
+    font-size: 1.15rem;
+    font-weight: bold;
+    color: #000;
+    background: linear-gradient(90deg, var(--green), var(--cyan), var(--pink));
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    margin-top: 4px;
+    box-shadow: 0 0 25px rgba(0, 255, 102, 0.5);
+    transition: transform 0.2s;
+  }
+  .launch-btn:hover { transform: scale(1.02); }
+
+  /* 遊戲內 HUD 抬頭顯示器 */
+  #hud {
+    position: absolute;
+    top: 10px;
+    left: 14px;
+    right: 14px;
+    display: none;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 20;
+    pointer-events: none;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .hud-card {
+    background: rgba(10, 4, 22, 0.84);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 243, 255, 0.35);
+    padding: 9px 14px;
+    border-radius: 12px;
+  }
+  .bar-bg {
+    width: 175px;
+    height: 11px;
+    background: #1a1a2e;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 4px;
+    border: 1px solid #444;
+  }
+  .bar-fill {
+    height: 100%;
+    width: 80%;
+    background: linear-gradient(90deg, var(--pink), var(--cyan), var(--green));
+    transition: width 0.15s;
+  }
+  .mission-card {
+    flex: 1;
+    min-width: 240px;
+    max-width: 430px;
+    text-align: center;
+    background: rgba(18, 6, 38, 0.88);
+    border: 2px solid var(--yellow);
+    box-shadow: 0 0 20px rgba(255, 230, 0, 0.22);
+    padding: 8px 15px;
+    border-radius: 14px;
+  }
+  .stage-badge {
+    font-size: 0.78rem;
+    color: var(--cyan);
+    font-weight: bold;
+  }
+  .mission-text {
+    font-size: 0.95rem;
+    font-weight: bold;
+    color: var(--yellow);
+    margin: 3px 0;
+  }
+  .prog-bar-bg {
+    width: 100%;
+    height: 9px;
+    background: #221538;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  #stageProgBar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--cyan), var(--yellow));
+    transition: width 0.2s;
+  }
+
+  /* 底部技能充能列 */
+  #bottomBar {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(8, 3, 18, 0.88);
+    border: 1px solid var(--cyan);
+    padding: 7px 18px;
+    border-radius: 30px;
+    font-size: 0.84rem;
+    z-index: 20;
+    display: none;
+    pointer-events: auto;
+    align-items: center;
+    gap: 12px;
+    white-space: nowrap;
+  }
+  .skill-btn {
+    background: #2a1842;
+    color: #999;
+    border: 1px solid #555;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .skill-btn.ready {
+    background: linear-gradient(45deg, var(--pink), var(--purple));
+    color: #fff;
+    border: 1px solid var(--yellow);
+    box-shadow: 0 0 18px rgba(255, 0, 127, 0.8);
+    animation: pulseBtn 0.8s infinite alternate;
+  }
+  @keyframes pulseBtn {
+    from { transform: scale(1); }
+    to { transform: scale(1.07); }
+  }
+
+  .modal-box {
+    background: #120924;
+    border: 2px solid var(--cyan);
+    border-radius: 16px;
+    max-width: 670px;
+    width: 100%;
+    padding: 22px;
+    line-height: 1.55;
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+  .guide-section {
+    background: rgba(255,255,255,0.04);
+    padding: 11px 14px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border-left: 4px solid var(--pink);
+    font-size: 0.88rem;
+  }
+</style>
+</head>
+<body>
+
+<div id="gameWrapper">
+  <canvas id="gameCanvas"></canvas>
+  <div class="flash-overlay" id="flashOverlay"></div>
+
+  <!-- 動態故事電台字幕 -->
+  <div id="narrativeBanner">📻 [Subconscious Radio]: Initializing...</div>
+
+  <!-- 左下角迷你 YouTube 電台視窗 -->
+  <div id="ytRadioWidget">
+    <div class="yt-header">
+      <span id="ytWidgetTitle">📻 YOUTUBE CYBER RADIO</span>
+      <span style="cursor:pointer; color:var(--pink);" onclick="toggleYtMinimize()">[_]</span>
+    </div>
+    <div id="ytPlayerContainer">
+      <div id="ytPlayer"></div>
+    </div>
+  </div>
+
+  <!-- 隱藏的本地音檔播放器 -->
+  <audio id="localAudioPlayer" loop style="display:none;"></audio>
+
+  <!-- 遊戲內 HUD -->
+  <div id="hud">
+    <div class="hud-card">
+      <div id="tripStatus" style="font-weight:bold; font-size:1rem; color:var(--green);">🌈 HAPPY TRIP</div>
+      <div id="subInfo" style="font-size:0.75rem; color:#bbb;">Sativa | 65% THC</div>
+      <div class="bar-bg"><div class="bar-fill" id="vibeBar"></div></div>
+      <div style="font-size:0.7rem; color:#aaa; margin-top:3px;" id="vibeHint">Vibe Stable</div>
+    </div>
+
+    <div class="mission-card">
+      <div class="stage-badge" id="stageTitle">STAGE 1 / 5</div>
+      <div class="mission-text" id="missionDesc">🎯 Mission</div>
+      <div class="prog-bar-bg"><div id="stageProgBar"></div></div>
+    </div>
+
+    <div class="hud-card" style="text-align:right;">
+      <div style="font-size:1.3rem; font-weight:bold; color:var(--cyan);">SCORE: <span id="scoreVal">0</span></div>
+      <div style="font-size:0.95rem; font-weight:bold; color:var(--yellow);" id="comboVal">🔥 COMBO x1</div>
+      <div style="margin-top:5px; display:flex; gap:6px; justify-content:flex-end; pointer-events:auto;">
+        <button onclick="toggleLanguage()" class="btn-top btn-lang" style="padding:3px 8px; font-size:0.72rem;" id="hudLangBtn">🌐 EN</button>
+        <button onclick="togglePause()" id="pauseBtn" style="background:#1c2541; color:var(--cyan); border:1px solid var(--cyan); border-radius:6px; padding:3px 9px; cursor:pointer; font-size:0.75rem;">⏸️ [P]</button>
+        <button onclick="quitToMenu()" id="labBackBtn" style="background:#2b1442; color:#fff; border:1px solid var(--pink); border-radius:6px; padding:3px 9px; cursor:pointer; font-size:0.75rem;">🧪 Lab</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部技能充能列 -->
+  <div id="bottomBar">
+    <span id="bottomHintText">🖱️ Move to dodge ｜ Graze near 👁️ for MP!</span>
+    <button class="skill-btn" id="skillBtn" onclick="triggerSkill()">⚡ Skill Charging (0%)</button>
+  </div>
+
+  <!-- 1. 主選單：賽博煉金室 -->
+  <div class="overlay-screen" id="mainMenu">
+    <div class="panel">
+      <div class="title-bar">
+        <h1 class="main-title" id="uiMainTitle">🧬 CyberTrip 4.0：阿卡西飛升計畫</h1>
+        <div class="top-btn-group">
+          <span class="high-score-tag" id="highScoreBadge">🏆 Best: 0</span>
+          <button class="btn-top btn-lang" onclick="toggleLanguage()" id="langSwitchBtn">🌐 English / 繁中</button>
+          <button class="btn-top" onclick="toggleGuide(true)" id="guideOpenBtn">📖 遊戲指南 & 故事</button>
+        </div>
+      </div>
+
+      <div class="grid-2col">
+        <!-- 左欄 -->
+        <div>
+          <div class="step-box">
+            <span class="step-title" id="lblStep1">1. 麻草基因 (決定物理慣性與節奏速率)</span>
+            <div class="btn-row">
+              <div class="opt-btn active" onclick="setCfg('strain','sativa',this)" id="btnSativa"></div>
+              <div class="opt-btn" onclick="setCfg('strain','indica',this)" id="btnIndica"></div>
+              <div class="opt-btn" onclick="setCfg('strain','hybrid',this)" id="btnHybrid"></div>
+            </div>
+          </div>
+
+          <div class="step-box">
+            <span class="step-title" id="lblStep2">2. 音樂音源與曲風電台 (支援 YouTube 串流 / MP3 / 合成器)</span>
+            <div class="btn-row" style="margin-bottom:7px;">
+              <div class="opt-btn active" onclick="setAudioMode('yt',this)" id="btnModeYt"></div>
+              <div class="opt-btn" onclick="setAudioMode('mp3',this)" id="btnModeMp3"></div>
+              <div class="opt-btn" onclick="setAudioMode('synth',this)" id="btnModeSynth"></div>
+            </div>
+
+            <!-- 曲風頻道選擇 -->
+            <div class="btn-row">
+              <div class="opt-btn active" onclick="setGenre('psytrance',this)" id="btnPsy">🛸 <b>Psytrance</b><br><small>145BPM Mix</small></div>
+              <div class="opt-btn" onclick="setGenre('cyberpunk',this)" id="btnCyber">🦾 <b>Cyberpunk</b><br><small>Darksynth</small></div>
+              <div class="opt-btn" onclick="setGenre('indie',this)" id="btnIndie">🌸 <b>Psych Indie</b><br><small>Synth Chill</small></div>
+              <div class="opt-btn" onclick="setGenre('techno',this)" id="btnTechno">⚙️ <b>Acid Techno</b><br><small>303 Rave</small></div>
+            </div>
+
+            <!-- 自訂 YouTube 連結或上傳 MP3 列 -->
+            <div class="custom-yt-row" id="ytInputRow">
+              <input type="text" class="yt-input" id="customYtUrl" placeholder="貼上任何 YouTube 網址或 Video ID (留空則播放精選頻道)">
+            </div>
+            <div class="custom-yt-row" id="mp3InputRow" style="display:none;">
+              <input type="file" accept="audio/*" class="yt-input" id="mp3FileInput" onchange="loadLocalMp3(this)">
+            </div>
+          </div>
+
+          <div class="step-box">
+            <span class="step-title" id="lblStep3">3. 難易度與維度深度 (Difficulty)</span>
+            <div class="btn-row">
+              <div class="opt-btn" onclick="setCfg('diff','easy',this)" id="btnEasy"></div>
+              <div class="opt-btn active" onclick="setCfg('diff','normal',this)" id="btnNormal"></div>
+              <div class="opt-btn" onclick="setCfg('diff','hard',this)" id="btnHard"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右欄 -->
+        <div>
+          <div class="step-box">
+            <span class="step-title" id="lblStep4">4. 宇宙穿越者 Avatar (流體幾何艦體 + 專屬大招)</span>
+            <div class="btn-row">
+              <div class="opt-btn active" onclick="setCfg('avatar','dog',this)" id="btnDog"></div>
+              <div class="opt-btn" onclick="setCfg('avatar','cat',this)" id="btnCat"></div>
+              <div class="opt-btn" onclick="setCfg('avatar','human',this)" id="btnHuman"></div>
+              <div class="opt-btn" onclick="setCfg('avatar','alien',this)" id="btnAlien"></div>
+            </div>
+          </div>
+
+          <div class="step-box">
+            <span class="step-title"><span id="lblStep5">5. THC 精神活性濃度：</span><span id="thcValText" style="color:var(--pink);">65%</span></span>
+            <input type="range" min="15" max="99" value="65" style="width:100%; accent-color:var(--pink);" oninput="updateThcSlider(this.value)">
+            <div id="thcHint" style="font-size:0.76rem; color:var(--green); margin-top:3px;"></div>
+          </div>
+
+          <div class="step-box">
+            <span class="step-title" id="lblStep6">6. 發酵熟成製程 (Curing - 被動天賦加成)</span>
+            <div class="btn-row">
+              <div class="opt-btn" onclick="setCfg('cure','fresh',this)" id="btnFresh"></div>
+              <div class="opt-btn active" onclick="setCfg('cure','aged',this)" id="btnAged"></div>
+              <div class="opt-btn" onclick="setCfg('cure','quantum',this)" id="btnQuantum"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="launch-btn" onclick="startGame()" id="btnLaunch">🔥 點火發酵！展開 5 大維度飛升之旅</button>
+    </div>
+  </div>
+
+  <!-- 2. 遊戲指南彈窗 -->
+  <div class="overlay-screen" id="guideModal" style="display:none; z-index:40;">
+    <div class="modal-box">
+      <h2 style="margin-top:0; color:var(--cyan);" id="guideTitle"></h2>
+      <div class="guide-section" id="guideSec1"></div>
+      <div class="guide-section" style="border-left-color:var(--green);" id="guideSec2"></div>
+      <div class="guide-section" style="border-left-color:var(--yellow);" id="guideSec3"></div>
+      <button class="launch-btn" onclick="toggleGuide(false)" id="guideCloseBtn"></button>
+    </div>
+  </div>
+
+  <!-- 3. 結算畫面 -->
+  <div class="overlay-screen" id="resultModal" style="display:none; z-index:45;">
+    <div class="modal-box" style="text-align:center;">
+      <h1 id="resTitle" style="font-size:1.95rem; margin-bottom:6px;"></h1>
+      <p id="resDesc" style="color:#ccc; margin-bottom:16px; font-size:0.92rem;"></p>
+      
+      <div style="background:#190d30; padding:16px; border-radius:12px; border:1px solid var(--cyan); margin-bottom:16px;">
+        <div style="font-size:2.5rem; font-weight:bold; color:var(--yellow);" id="resRank">RANK: SSS</div>
+        <div style="font-size:1.35rem; color:var(--cyan); margin:6px 0;"><span id="lblFinalScore">Score: </span><span id="resScore">0</span></div>
+        <div style="font-size:0.88rem; color:#ddd;" id="resDetail"></div>
+        <div style="margin-top:10px; padding:8px; background:#0d061a; border-radius:8px; font-family:monospace; color:var(--green); font-size:0.85rem;" id="resSeed"></div>
+      </div>
+
+      <button class="launch-btn" onclick="quitToMenu()" id="btnRetry"></button>
+    </div>
+  </div>
+</div>
+
+<!-- 載入官方 YouTube IFrame API -->
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<script>
+// ==================== 1. 雙語字典系統 (i18n Localization) ====================
+let curLang = 'zh';
+
+const I18N = {
+  zh: {
+    mainTitle: "🧬 CyberTrip 4.0：阿卡西飛升計畫",
+    bestRecord: "🏆 最高紀錄：",
+    guideBtn: "📖 遊戲指南 & 故事",
+    step1: "1. 麻草基因 (決定物理慣性與節奏速率)",
+    sativa: "🌿 <b>Sativa</b><br><small>極速靈敏・高頻共振</small>",
+    indica: "🍂 <b>Indica</b><br><small>液態慢速・波浪呼吸</small>",
+    hybrid: "⚡ <b>Hybrid</b><br><small>動靜雙重・量子變速</small>",
+    step2: "2. 音樂音源與曲風電台 (支援 YouTube 串流 / MP3 / 合成器)",
+    modeYt: "📺 <b>YouTube 電台</b><br><small>真實電音串流</small>",
+    modeMp3: "📂 <b>載入本地 MP3</b><br><small>自選音檔共振</small>",
+    modeSynth: "🎹 <b>Web 合成器</b><br><small>離線即時生成</small>",
+    ytPlaceholder: "貼上任何 YouTube 網址或 Video ID (留空則自動播放上方精選曲風電台)",
+    step3: "3. 難易度與維度深度 (Difficulty)",
+    easy: "🌱 <b>微醺新手</b><br><small>3 階段輕鬆體驗</small>",
+    normal: "🚀 <b>迷幻潛行者</b><br><small>完整 5 階段+Boss</small>",
+    hard: "💀 <b>自我消融</b><br><small>極限狂暴・3倍得分</small>",
+    step4: "4. 宇宙穿越者 Avatar (流體幾何艦體 + 專屬大招)",
+    dog: "🐶 <b>邊境牧羊犬</b><br><small>大招：音波震碎魔眼</small>",
+    cat: "🐱 <b>賽博折耳貓</b><br><small>大招：全場光球磁吸</small>",
+    human: "🧑‍🚀 <b>意識潛行者</b><br><small>大招：心境瞬間回滿</small>",
+    alien: "👽 <b>四維外星人</b><br><small>大招：魔眼全變黃金</small>",
+    step5: "5. THC 精神活性濃度：",
+    step6: "6. 發酵熟成製程 (Curing - 被動天賦加成)",
+    fresh: "🌱 <b>新鮮直抽</b><br><small>技能充能速度 +50%</small>",
+    aged: "🏺 <b>木桶醇化</b><br><small>魔眼傷害減半・防崩潰</small>",
+    quantum: "🌌 <b>量子發酵</b><br><small>開局自帶 4x 連擊倍率</small>",
+    launch: "🔥 點火發酵！展開 5 大維度飛升之旅",
+    hudLab: "🧪 煉金室",
+    pause: "⏸️ 暫停 [P]",
+    resume: "▶️ 繼續 [P]",
+    bottomHint: "🖱️ 滑鼠/手指移動閃避 ｜ 貼近 👁️ 魔眼觸發 <b>GRAZE 擦彈充能</b>",
+    skillCharging: (pct) => `⚡ 技能充能中 (${pct}%)`,
+    skillReady: "⚡ [空白鍵] 釋放角色大招 (MAX!)",
+    happyTrip: "🌈 HAPPY TRIP (高維共振漫遊)",
+    badTrip: "👁️ BAD TRIP (狂暴 2.5x 得分加成中！)",
+    vibeNormal: "心境穩定 (低於35%進入2.5倍狂暴Bad Trip)",
+    vibeDanger: "⚠️ 瀕臨石化！快吃 🌿CBD 或按技能自救！",
+    laserWarn: "⚠️ 雷射鎖定預警！快閃開！",
+    guideTitle: "📖 《CyberTrip 4.0》設計師指南與世界觀",
+    guideSec1: "<b>🌌 故事背景：2142 阿卡西飛升計畫</b><br>賽博巨企「OmniCorp」用演算法封鎖了全宇宙生物的夢境。你是一隻覺醒的邊境牧羊犬（或折耳貓、外星潛行者），在吸食禁忌的量子草本後進入 <b>Hyper Flying Trip</b>！你必須穿越 5 個物理規則截然不同的時空維度，並擊敗最終心魔 Boss「妄想全視之眼」，解放宇宙意識！",
+    guideSec2: "<b>🌀 5 大維度專屬空間機制</b><br>• <b>Stage 1 (霓虹地平線)：</b> 熟悉流體操控與擦彈充能。<br>• <b>Stage 2 (液態正弦波海)：</b> 掉落物會隨音波<b>左右蛇行漂移</b>！<br>• <b>Stage 3 (六邊形引力矩陣)：</b> 中心產生<b>引力脈衝</b>，將物體拉向中央！<br>• <b>Stage 4 (萬花筒鏡像維度)：</b> 啟動<b>雙重鏡像分身</b>幫忙接球！<br>• <b>Stage 5 (阿卡西奇點 Boss 戰)：</b> 閃避<b>紅色死亡雷射預警線</b>，撿取「🌟星辰種子」發射光子砲轟爆魔眼！",
+    guideSec3: "<b>🎧 YouTube 電台與高手技巧</b><br>• <b>自選 YouTube 音樂：</b> 部署至 GitHub Pages 後，可直接使用內建 4 大曲風 YouTube 電台，或貼上任何無版權封鎖的 YouTube DJ Mix 網址！<br>• <b>Graze 擦彈充能：</b> 貼著 👁️ 魔眼邊緣閃過可獲高分並快速充滿 MP 釋放大招！",
+    guideClose: "✅ 準備就緒，返回煉金室",
+    winTitle: "🌌 飛升成功：突破阿卡西奇點！",
+    winDesc: "你粉碎了妄想全視之眼，成功將自由夢境帶回全宇宙！",
+    loseTitle: "🛋️ COUCH-LOCKED：意識石化出局！",
+    loseDesc: "暗物質魔眼與死亡雷射吞噬了你的心境，你在沙發上徹底石化了...",
+    finalScoreLbl: "最終得分：",
+    retryBtn: "🔄 返回煉金室，挑戰更高紀錄",
+    stages: [
+      { name: "STAGE 1：賽博霓虹地平線", desc: (c,m) => `🎯 階段任務：收集多巴胺光球啟動曲速 (${c}/${m})` },
+      { name: "STAGE 2：液態正弦音波海", desc: (c,m) => `🌊 特殊機制：掉落物隨波浪蛇行！收集光球 (${c}/${m})` },
+      { name: "STAGE 3：六邊形引力矩陣", desc: (c,m) => `🧲 特殊機制：抵抗中央引力拉扯！收集能量 (${c}/${m})` },
+      { name: "STAGE 4：神聖萬花筒分身", desc: (c,m) => `✨ 特殊機制：雙重鏡像分身助陣！匯聚能量 (${c}/${m})` },
+      { name: "FINAL STAGE：妄想全視魔眼", desc: (c,m) => `⚔️ 最終決戰：躲避雷射，撿「🌟」轟擊魔眼 (Boss HP: ${Math.max(0, 100-c)}%)` }
+    ],
+    quotes: {
+      dog: [
+        "🐶 邊牧：「呼…這口草本太純了，我的耳朵開始失速擺動，看見飛盤星系了！」",
+        "🐶 邊牧：「水面在唱歌！這些發光骨頭正在隨正弦波蛇行，看我精準預判！」",
+        "🐶 邊牧：「六邊形引力場想吸住我的狗爪？不可能，我是宇宙最快牧羊犬！」",
+        "🐶 邊牧：「萬花筒分身啟動！現在有兩隻邊牧一起在第四維度接飛盤！」",
+        "🐶 邊牧：「那顆巨型魔眼想用雷射把我們變成沙發馬鈴薯，撿起星辰種子轟爆牠！汪！」"
+      ],
+      cat: [
+        "🐱 折耳貓：「喵嗚…瞳孔放大 300%，整個賽博網格都是我的貓抓板。」",
+        "🐱 折耳貓：「貓是液體做的，這片迷幻正弦波海完全合我的頻率～」",
+        "🐱 折耳貓：「引力矩陣？別鬧了，連黑洞都吸不走一隻呼嚕中的太空貓。」",
+        "🐱 折耳貓：「薛丁格的分身展開！左邊是我，右邊也是我！」",
+        "🐱 折耳貓：「居然敢用紅外線雷射筆照本喵？看我把星辰拍回你臉上！」"
+      ],
+      human: [
+        "🧑‍🚀 潛行者：「松果體防火牆已突破，多巴胺光束正在重組我的視覺神經。」",
+        "🧑‍🚀 潛行者：「進入液態音浪區，掉落物開始隨流體擺動，保持呼吸節奏！」",
+        "🧑‍🚀 潛行者：「警告，偵測到暗黑科技引力奇點，注意抵抗向心力！」",
+        "🧑‍🚀 潛行者：「自我邊界開始消融，我在萬花筒中看見了自己的平行分身…」",
+        "🧑‍🚀 潛行者：「那是 OmniCorp 的全視監控魔眼！躲開死亡雷射，做個了斷吧！」"
+      ],
+      alien: [
+        "👽 外星人：「地球的草本植物竟有如此曲速能量，三維空間開始摺疊了。」",
+        "👽 外星人：「弦理論具象化了，所有物質都在隨音樂頻率共振擺動。」",
+        "👽 外星人：「六邊形蜂巢矩陣，這是高等文明的量子通道。」",
+        "👽 外星人：「啟動四維投影，我的高維分身將同時拾取兩側星塵。」",
+        "👽 外星人：「低維度的妄想魔眼，接受阿卡西星辰種子的降維打擊吧！」"
+      ]
+    },
+    skills: {
+      dog: "汪！太空音波震碎全場魔眼！",
+      cat: "呼嚕～量子引力吸乾全場光球！",
+      human: "深呼吸～心境瞬間 100% 滿血淨化！",
+      alien: "維度摺疊！全場魔眼瞬間化為黃金光球！"
+    }
+  },
+  en: {
+    mainTitle: "🧬 CyberTrip 4.0: The Akashic Ascension",
+    bestRecord: "🏆 Best: ",
+    guideBtn: "📖 Guide & Lore",
+    step1: "1. Cannabis Genetics (Physics & Tempo)",
+    sativa: "🌿 <b>Sativa</b><br><small>Hyper Speed & Agile</small>",
+    indica: "🍂 <b>Indica</b><br><small>Liquid Slow & Wave</small>",
+    hybrid: "⚡ <b>Hybrid</b><br><small>Dynamic Shift</small>",
+    step2: "2. Audio Engine & Radio (YouTube Stream / MP3 / Synth)",
+    modeYt: "📺 <b>YouTube Radio</b><br><small>Real DJ Mix Stream</small>",
+    modeMp3: "📂 <b>Local MP3 File</b><br><small>Custom Audio Sync</small>",
+    modeSynth: "🎹 <b>Web Synth</b><br><small>Offline Procedural</small>",
+    ytPlaceholder: "Paste any YouTube URL or Video ID (Leave blank for curated genre radio)",
+    step3: "3. Trip Intensity (Difficulty & Length)",
+    easy: "🌱 <b>Micro-dose</b><br><small>3 Stages Chill Run</small>",
+    normal: "🚀 <b>Psychonaut</b><br><small>5 Stages + Boss</small>",
+    hard: "💀 <b>Ego Death</b><br><small>Insane Speed・3x Pts</small>",
+    step4: "4. Cosmic Avatar (Fluid Craft & Ultimate Skill)",
+    dog: "🐶 <b>Border Collie</b><br><small>Ult: Sonic Bark Blast</small>",
+    cat: "🐱 <b>Cyber Fold Cat</b><br><small>Ult: Quantum Magnet</small>",
+    human: "🧑‍🚀 <b>Psychonaut</b><br><small>Ult: Full Vibe Heal</small>",
+    alien: "👽 <b>4D Being</b><br><small>Ult: Eyes to Gold</small>",
+    step5: "5. THC Potency: ",
+    step6: "6. Curing Process (Passive Buffs)",
+    fresh: "🌱 <b>Fresh Bud</b><br><small>MP Charge +50% Faster</small>",
+    aged: "🏺 <b>60-Day Cured</b><br><small>Half Damage Taken</small>",
+    quantum: "🌌 <b>Quantum Cure</b><br><small>Start at 4x Combo</small>",
+    launch: "🔥 Ignite & Ascend! Launch 5-Dimension Trip",
+    hudLab: "🧪 Lab",
+    pause: "⏸️ Pause [P]",
+    resume: "▶️ Resume [P]",
+    bottomHint: "🖱️ Move/Touch to Dodge ｜ Graze near 👁️ for <b>Bonus MP!</b>",
+    skillCharging: (pct) => `⚡ Skill Charging (${pct}%)`,
+    skillReady: "⚡ [SPACE] UNLEASH ULTIMATE (MAX!)",
+    happyTrip: "🌈 HAPPY TRIP (High-Vibe Cruising)",
+    badTrip: "👁️ BAD TRIP (2.5x Bloodlust Multiplier!)",
+    vibeNormal: "Vibe Stable (<35% triggers 2.5x Bad Trip Frenzy)",
+    vibeDanger: "⚠️ COUCH-LOCK IMMINENT! Grab 🌿CBD or use Skill!",
+    laserWarn: "⚠️ LASER LOCK! DODGE NOW!",
+    guideTitle: "📖 CyberTrip 4.0: Psychonaut's Manual & Lore",
+    guideSec1: "<b>🌌 Lore: The 2142 Akashic Ascension</b><br>Mega-corp 'OmniCorp' has locked all sentient dreams behind a neural firewall. As an awakened Border Collie (or Cyber Cat / Psychonaut), you ignite forbidden quantum herbs to enter a <b>Hyper Flying Trip</b>! Blast through 5 distinct dimensional laws and shatter the final boss—The All-Seeing Paranoia Eye!",
+    guideSec2: "<b>🌀 5 Dimensional Stage Mechanics</b><br>• <b>Stage 1 (Neon Horizon):</b> Master fluid movement and Graze charging.<br>• <b>Stage 2 (Sine-Wave Ocean):</b> Falling orbs <b>snake left & right</b> with the soundwaves!<br>• <b>Stage 3 (Hex Gravity Matrix):</b> A central singularity pulls objects toward the middle!<br>• <b>Stage 4 (Mandala Mirror):</b> Summon <b>Twin Mirror Clones</b> to catch orbs across lanes!<br>• <b>Stage 5 (The Paranoia Eye Boss):</b> Dodge <b>Red Telegraphed Lasers</b> and grab 🌟 Star Seeds to fire photon cannons!",
+    guideSec3: "<b>🎧 YouTube Cyber Radio & Pro Tips</b><br>• <b>Custom YouTube Stream:</b> Pick our curated genre channels or paste ANY embed-friendly YouTube DJ Mix URL to fly to your favorite tracks!<br>• <b>Graze to Charge:</b> Skim closely past 👁️ Dark Eyes without touching them for +500 pts and +28% MP!",
+    guideClose: "✅ Got It, Back to Dispensary Lab",
+    winTitle: "🌌 ASCENSION COMPLETE: SINGULARITY BREACHED!",
+    winDesc: "You shattered the Paranoia Eye and freed the cosmic consciousness!",
+    loseTitle: "🛋️ COUCH-LOCKED: CONSCIOUSNESS PETRIFIED!",
+    loseDesc: "The paranoia eyes overwhelmed your vibe. Try 60-Day Cured or lower THC%!",
+    finalScoreLbl: "Final Score: ",
+    retryBtn: "🔄 Back to Lab, Try New Recipe & Track",
+    stages: [
+      { name: "STAGE 1: Neon Cyber Horizon", desc: (c,m) => `🎯 Mission: Collect Dopamine Orbs (${c}/${m})` },
+      { name: "STAGE 2: Liquid Sine-Wave Ocean", desc: (c,m) => `🌊 Mechanic: Slithering Orbs! Collect (${c}/${m})` },
+      { name: "STAGE 3: Hex Gravity Matrix", desc: (c,m) => `🧲 Mechanic: Central Gravity Pull! Collect (${c}/${m})` },
+      { name: "STAGE 4: Sacred Mandala Mirrors", desc: (c,m) => `✨ Mechanic: Twin Mirror Clones Active! (${c}/${m})` },
+      { name: "FINAL STAGE: The Paranoia Eye (BOSS)", desc: (c,m) => `⚔️ Boss Fight: Dodge Lasers & Grab 🌟 (Boss HP: ${Math.max(0, 100-c)}%)` }
+    ],
+    quotes: {
+      dog: [
+        "🐶 Collie: 'Woof! That herb kicked in hard! My ears are flapping at warp speed!'",
+        "🐶 Collie: 'The ocean is singing! Those glowing bones are surfing the sine waves!'",
+        "🐶 Collie: 'A hexagonal gravity well? Nothing can hold back the fastest cosmic dog!'",
+        "🐶 Collie: 'Kaleidoscope clones deployed! Double the paws, double the frisbees!'",
+        "🐶 Collie: 'That giant Paranoia Eye wants to couch-lock us! Grab the Star Seeds and blast it!'"
+      ],
+      cat: [
+        "🐱 Cyber Cat: 'Meow... Pupils dilated 300%. This neon grid is my scratching post.'",
+        "🐱 Cyber Cat: 'Cats are liquid anyway. These psychedelic sine waves feel like home~'",
+        "🐱 Cyber Cat: 'Gravity matrix? Please, even a black hole can't pull a purring space cat.'",
+        "🐱 Cyber Cat: 'Schrödinger's clones activated! I am here, and also over there!'",
+        "🐱 Cyber Cat: 'Did that giant eye just point a red laser at me?! Time to swat some stars!'"
+      ],
+      human: [
+        "🧑‍🚀 Psychonaut: 'Pineal firewall breached. Dopamine beams are rewiring my optic nerves.'",
+        "🧑‍🚀 Psychonaut: 'Entering liquid soundwave sector. Objects are oscillating—ride the flow!'",
+        "🧑‍🚀 Psychonaut: 'Warning: Dark techno gravitational singularity ahead. Fight the pull!'",
+        "🧑‍🚀 Psychonaut: 'Ego boundaries dissolving... My parallel selves are joining the flight.'",
+        "🧑‍🚀 Psychonaut: 'OmniCorp's All-Seeing Paranoia Eye! Dodge the sweep lasers and end this!'"
+      ],
+      alien: [
+        "👽 4D Being: 'Earth flora contains remarkable warp terpenes. 3D space is folding.'",
+        "👽 4D Being: 'String theory visualized. Matter is oscillating in harmonic sine waves.'",
+        "👽 4D Being: 'Hexagonal honeycomb matrix detected. A classic Type-III quantum tunnel.'",
+        "👽 4D Being: 'Projecting 4-dimensional shadows to harvest stardust across timelines.'",
+        "👽 4D Being: 'Low-dimensional Paranoia Eye, witness the power of Akashic Star Seeds!'"
+      ]
+    },
+    skills: {
+      dog: "WOOF! Sonic Bark shattered all Dark Eyes!",
+      cat: "PURR~ Quantum Magnet pulled all orbs!",
+      human: "DEEP BREATH~ Vibe 100% Restored + Shield!",
+      alien: "DIMENSION FOLD! All Dark Eyes turned to Gold!"
+    }
+  }
+};
+
+function applyTranslations() {
+  const t = I18N[curLang];
+  document.getElementById('uiMainTitle').innerText = t.mainTitle;
+  document.getElementById('highScoreBadge').innerText = `${t.bestRecord}${savedHighScore}`;
+  document.getElementById('guideOpenBtn').innerText = t.guideBtn;
+  document.getElementById('hudLangBtn').innerText = curLang === 'zh' ? '🌐 EN' : '🌐 繁中';
+
+  document.getElementById('lblStep1').innerText = t.step1;
+  document.getElementById('btnSativa').innerHTML = t.sativa;
+  document.getElementById('btnIndica').innerHTML = t.indica;
+  document.getElementById('btnHybrid').innerHTML = t.hybrid;
+
+  document.getElementById('lblStep2').innerText = t.step2;
+  document.getElementById('btnModeYt').innerHTML = t.modeYt;
+  document.getElementById('btnModeMp3').innerHTML = t.modeMp3;
+  document.getElementById('btnModeSynth').innerHTML = t.modeSynth;
+  document.getElementById('customYtUrl').placeholder = t.ytPlaceholder;
+
+  document.getElementById('lblStep3').innerText = t.step3;
+  document.getElementById('btnEasy').innerHTML = t.easy;
+  document.getElementById('btnNormal').innerHTML = t.normal;
+  document.getElementById('btnHard').innerHTML = t.hard;
+
+  document.getElementById('lblStep4').innerText = t.step4;
+  document.getElementById('btnDog').innerHTML = t.dog;
+  document.getElementById('btnCat').innerHTML = t.cat;
+  document.getElementById('btnHuman').innerHTML = t.human;
+  document.getElementById('btnAlien').innerHTML = t.alien;
+
+  document.getElementById('lblStep5').innerText = t.step5;
+  document.getElementById('lblStep6').innerText = t.step6;
+  document.getElementById('btnFresh').innerHTML = t.fresh;
+  document.getElementById('btnAged').innerHTML = t.aged;
+  document.getElementById('btnQuantum').innerHTML = t.quantum;
+
+  document.getElementById('btnLaunch').innerText = t.launch;
+  document.getElementById('labBackBtn').innerText = t.hudLab;
+  document.getElementById('pauseBtn').innerText = gs.paused ? t.resume : t.pause;
+  document.getElementById('bottomHintText').innerHTML = t.bottomHint;
+
+  document.getElementById('guideTitle').innerText = t.guideTitle;
+  document.getElementById('guideSec1').innerHTML = t.guideSec1;
+  document.getElementById('guideSec2').innerHTML = t.guideSec2;
+  document.getElementById('guideSec3').innerHTML = t.guideSec3;
+  document.getElementById('guideCloseBtn').innerText = t.guideClose;
+  document.getElementById('lblFinalScore').innerText = t.finalScoreLbl;
+  document.getElementById('btnRetry').innerText = t.retryBtn;
+
+  updateThcSlider(cfg.thc);
+  if (gs.active) {
+    chargeSkill(0);
+    updateHUD();
+  }
+}
+
+function toggleLanguage() {
+  curLang = curLang === 'zh' ? 'en' : 'zh';
+  applyTranslations();
+}
+
+// ==================== 2. 遊戲設定與 YouTube 電台串流系統 ====================
+const cfg = {
+  strain: 'sativa',
+  audioMode: 'yt',
+  genre: 'psytrance',
+  diff: 'normal',
+  avatar: 'dog',
+  thc: 65,
+  cure: 'aged'
+};
+
+// 精選允許外部網頁 Embed 嵌入的音樂頻道與長版混音 Video IDs
+const YT_CHANNELS = {
+  psytrance: 'xw3C03Ba8Dk', // Astrix - Deep Jungle Walk
+  cyberpunk: 'Y8DekFFCE5c', // Perturbator / Cyberpunk Darksynth
+  indie:     '8GW6sLrK40k', // HOME - Resonance
+  techno:    '4xDzrJKXOOY'  // Synthwave / Electronic Radio
+};
+
+let ytPlayer = null;
+let ytReady = false;
+let ytMinimized = false;
+
+function onYouTubeIframeAPIReady() {
+  const playerVars = {
+    'autoplay': 0,
+    'controls': 1,
+    'rel': 0,
+    'playsinline': 1
+  };
+  if (window.location.protocol.startsWith('http')) {
+    playerVars.origin = window.location.origin;
+  }
+
+  ytPlayer = new YT.Player('ytPlayer', {
+    height: '100',
+    width: '100%',
+    videoId: YT_CHANNELS.psytrance,
+    playerVars: playerVars,
+    events: {
+      'onReady': () => { ytReady = true; },
+      'onError': (e) => {
+        console.warn("YouTube Embed Error (" + e.data + "), auto-switching to Web Synth fallback.");
+        if (gs.active) {
+          if (musicInterval) clearInterval(musicInterval);
+          startWebSynthLoop();
+        }
+      }
+    }
+  });
+}
+
+function extractYouTubeId(input) {
+  if (!input) return null;
+  const trimmed = input.trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+  const match = trimmed.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([a-zA-Z0-9_-]{11})/);
+  return match ? match[1] : null;
+}
+
+function setAudioMode(mode, el) {
+  cfg.audioMode = mode;
+  Array.from(el.parentElement.children).forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('ytInputRow').style.display = mode === 'yt' ? 'flex' : 'none';
+  document.getElementById('mp3InputRow').style.display = mode === 'mp3' ? 'flex' : 'none';
+}
+
+function setGenre(g, el) {
+  cfg.genre = g;
+  Array.from(el.parentElement.children).forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function toggleYtMinimize() {
+  ytMinimized = !ytMinimized;
+  document.getElementById('ytPlayerContainer').style.display = ytMinimized ? 'none' : 'block';
+}
+
+let localMp3Url = null;
+function loadLocalMp3(input) {
+  if (input.files && input.files[0]) {
+    localMp3Url = URL.createObjectURL(input.files[0]);
+    document.getElementById('localAudioPlayer').src = localMp3Url;
+  }
+}
+
+const STAGE_META = [
+  { id: 1, bgType: "cyber_grid", c1: "#ff007f", c2: "#00f3ff", goalType: "orbs", baseTarget: 7 },
+  { id: 2, bgType: "sine_wave",  c1: "#00ffaa", c2: "#ffe600", goalType: "orbs", baseTarget: 9 },
+  { id: 3, bgType: "hex_tunnel", c1: "#00ff44", c2: "#8a2be2", goalType: "orbs", baseTarget: 11 },
+  { id: 4, bgType: "mandala",    c1: "#ffaa00", c2: "#ff00aa", goalType: "orbs", baseTarget: 14 },
+  { id: 5, bgType: "boss_void",  c1: "#ff0033", c2: "#00f3ff", goalType: "boss", baseTarget: 100 }
+];
+
+const AVATAR_ICONS = { dog: "🐶", cat: "🐱", human: "🧑‍🚀", alien: "👽" };
+
+let savedHighScore = parseInt(localStorage.getItem('cybertrip_best') || '0');
+
+function setCfg(key, val, el) {
+  cfg[key] = val;
+  Array.from(el.parentElement.children).forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function updateThcSlider(val) {
+  cfg.thc = parseInt(val);
+  document.getElementById('thcValText').innerText = `${val}%`;
+  const mult = (1 + (val / 45)).toFixed(1);
+  const hint = document.getElementById('thcHint');
+  if (curLang === 'zh') {
+    if (val < 40) { hint.style.color = "#00f3ff"; hint.innerText = `得分倍率：${mult}x ｜ 狀態：微醺平穩，極少幻覺干擾`; }
+    else if (val < 75) { hint.style.color = "#00ff66"; hint.innerText = `得分倍率：${mult}x ｜ 狀態：標準迷幻穿梭，音畫共振強烈`; }
+    else { hint.style.color = "#ff0055"; hint.innerText = `得分倍率：${mult}x ｜ ⚠️ 警告：高濃度失速邊緣，視野搖擺劇烈！`; }
+  } else {
+    if (val < 40) { hint.style.color = "#00f3ff"; hint.innerText = `Multiplier: ${mult}x | Smooth micro-dose cruise`; }
+    else if (val < 75) { hint.style.color = "#00ff66"; hint.innerText = `Multiplier: ${mult}x | Hyper Flying Trip & strong visuals`; }
+    else { hint.style.color = "#ff0055"; hint.innerText = `Multiplier: ${mult}x | ⚠️ WARNING: Heavy sway & Overdose edge!`; }
+  }
+}
+
+function toggleGuide(show) {
+  document.getElementById('guideModal').style.display = show ? 'flex' : 'none';
+}
+
+function showNarrative(text) {
+  const banner = document.getElementById('narrativeBanner');
+  banner.innerText = text;
+  banner.classList.add('show');
+  setTimeout(() => { banner.classList.remove('show'); }, 4500);
+}
+
+// ==================== 3. 音效與音樂引擎 (YouTube / MP3 / Synth 三合一) ====================
+let audioCtx, masterGain, delayNode, musicInterval;
+let arpStep = 0;
+let beatPulse = 0;
+
+function initAudioSystem() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.68;
+
+  delayNode = audioCtx.createDelay();
+  delayNode.delayTime.value = 0.25;
+  const fb = audioCtx.createGain();
+  fb.gain.value = 0.35;
+  delayNode.connect(fb);
+  fb.connect(delayNode);
+  delayNode.connect(masterGain);
+  masterGain.connect(audioCtx.destination);
+
+  const ytWidget = document.getElementById('ytRadioWidget');
+  const localAudio = document.getElementById('localAudioPlayer');
+
+  if (cfg.audioMode === 'yt' && window.location.protocol === 'file:') {
+    ytWidget.style.display = 'none';
+    startWebSynthLoop();
+    return;
+  }
+
+  if (cfg.audioMode === 'yt') {
+    ytWidget.style.display = 'block';
+    const customInput = document.getElementById('customYtUrl').value;
+    const vid = extractYouTubeId(customInput) || YT_CHANNELS[cfg.genre];
+    if (ytReady && ytPlayer && ytPlayer.loadVideoById) {
+      ytPlayer.loadVideoById(vid);
+      ytPlayer.playVideo();
+      startVisualBeatClock();
+    } else {
+      startWebSynthLoop();
+    }
+  } else if (cfg.audioMode === 'mp3' && localMp3Url) {
+    ytWidget.style.display = 'none';
+    localAudio.currentTime = 0;
+    localAudio.play();
+    startVisualBeatClock();
+  } else {
+    ytWidget.style.display = 'none';
+    startWebSynthLoop();
+  }
+}
+
+function startVisualBeatClock() {
+  let bpm = cfg.genre === 'psytrance' ? 145 : (cfg.genre === 'cyberpunk' ? 116 : 128);
+  const beatMs = (60 / bpm) * 1000;
+  musicInterval = setInterval(() => {
+    if (gs.active && !gs.paused) beatPulse = 1.0;
+  }, beatMs);
+}
+
+function startWebSynthLoop() {
+  let bpm = cfg.genre === 'psytrance' ? 145 : (cfg.genre === 'cyberpunk' ? 116 : (cfg.genre === 'indie' ? 110 : 138));
+  if (cfg.strain === 'indica') bpm *= 0.84;
+  if (cfg.strain === 'sativa') bpm *= 1.06;
+  const stepSec = (60 / bpm) / 4;
+
+  musicInterval = setInterval(() => {
+    if (!gs.active || gs.paused || !audioCtx) return;
+    const now = audioCtx.currentTime;
+    const s = arpStep % 16;
+
+    if (s % 4 === 0) {
+      playKick(now, cfg.genre === 'cyberpunk' ? 115 : 155);
+      beatPulse = 1.0;
+    }
+    if (cfg.genre === 'psytrance' && s % 4 !== 0) {
+      playBass(now, gs.badTrip ? 51.9 : 55, 0.08, 'sawtooth', 800);
+    } else if (cfg.genre === 'cyberpunk' && s % 2 === 0) {
+      playBass(now, s < 8 ? 43.65 : 51.91, 0.16, 'sawtooth', 950);
+    } else if (cfg.genre === 'techno' && (s === 2 || s === 6 || s === 10 || s === 14)) {
+      playBass(now, 65.4, 0.12, 'sawtooth', 1600);
+    } else if (cfg.genre === 'indie' && (s === 0 || s === 6 || s === 12)) {
+      playBass(now, 65.4, 0.28, 'triangle', 550);
+    }
+
+    const scale = gs.badTrip ? [207.65, 220, 277.18, 311.13, 415.3] : [220, 261.63, 329.63, 392.00, 440, 523.25, 659.25];
+    if (s % 2 === 0 || cfg.genre === 'psytrance') {
+      const f = scale[(arpStep + (s % 3)) % scale.length] * (gs.stageIdx >= 3 ? 1.25 : 1);
+      playStereoNote(now, f, 0.11, 'square', Math.sin(arpStep * 0.65) * 0.8);
+    }
+    arpStep++;
+  }, stepSec * 1000);
+}
+
+function stopAllAudio() {
+  if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
+  if (ytReady && ytPlayer && ytPlayer.pauseVideo) {
+    try { ytPlayer.pauseVideo(); } catch(e) {}
+  }
+  const localAudio = document.getElementById('localAudioPlayer');
+  localAudio.pause();
+  if (audioCtx) {
+    try { audioCtx.close(); } catch(e) {}
+    audioCtx = null;
+  }
+}
+
+function playKick(t, f) {
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(30, t + 0.13);
+  g.gain.setValueAtTime(0.55, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+  o.connect(g); g.connect(masterGain); o.start(t); o.stop(t + 0.16);
+}
+function playBass(t, f, dur, type, cut) {
+  const o = audioCtx.createOscillator(), fl = audioCtx.createBiquadFilter(), g = audioCtx.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t);
+  fl.type = 'lowpass'; fl.frequency.setValueAtTime(cut, t); fl.frequency.exponentialRampToValueAtTime(110, t + dur);
+  g.gain.setValueAtTime(0.24, t); g.gain.exponentialRampToValueAtTime(0.01, t + dur);
+  o.connect(fl); fl.connect(g); g.connect(masterGain); o.start(t); o.stop(t + dur + 0.02);
+}
+function playStereoNote(t, f, dur, type, panVal) {
+  const o = audioCtx.createOscillator(), p = audioCtx.createStereoPanner(), g = audioCtx.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); p.pan.setValueAtTime(panVal, t);
+  g.gain.setValueAtTime(0.07, t); g.gain.exponentialRampToValueAtTime(0.004, t + dur);
+  o.connect(p); p.connect(g); g.connect(masterGain); g.connect(delayNode); o.start(t); o.stop(t + dur + 0.02);
+}
+function playSFX(f1, f2, dur, type = 'sine') {
+  if (!audioCtx || gs.paused) return;
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = type; o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  g.gain.setValueAtTime(0.26, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(g); g.connect(masterGain); o.start(t); o.stop(t + dur);
+}
+
+// ==================== 4. 遊戲核心迴圈與雙語狀態同步 ====================
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let width, height;
+function resize() {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+const gs = {
+  active: false, paused: false, score: 0, vibe: 90, badTrip: false,
+  combo: 1, maxCombo: 1, grazeCount: 0, skillCharge: 100,
+  stageIdx: 0, stageProgress: 0, stageTarget: 7, invincibleUntil: 0, screenShake: 0,
+  playerX: window.innerWidth / 2, targetX: window.innerWidth / 2,
+  trail: [], particles: [], items: [], floatingTexts: [],
+  bossX: window.innerWidth / 2, lasers: [],
+  bossLaser: { state: 'idle', x: 0, timer: 0 }
+};
+
+window.addEventListener('mousemove', e => { if (!gs.paused) gs.targetX = e.clientX; });
+window.addEventListener('touchmove', e => {
+  if (!gs.paused && e.touches.length > 0) gs.targetX = e.touches[0].clientX;
+}, { passive: true });
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space' && gs.active && !gs.paused) triggerSkill();
+  if (e.code === 'KeyP' && gs.active) togglePause();
+});
+
+function spawnParticles(x, y, color, count = 18) {
+  for (let i = 0; i < count; i++) {
+    const ang = Math.random() * Math.PI * 2, spd = 2 + Math.random() * 7;
+    gs.particles.push({ x, y, vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd, color, size: 3+Math.random()*4, alpha: 1.0 });
+  }
+}
+
+function addFloatText(text, x, y, color = "#ffe600") {
+  gs.floatingTexts.push({ text, x, y, color, alpha: 1.0, vy: -2.2 });
+}
+
+function flashScreen(color = "#fff") {
+  const fl = document.getElementById('flashOverlay');
+  fl.style.background = color; fl.style.opacity = '0.72';
+  setTimeout(() => { fl.style.opacity = '0'; }, 85);
+}
+
+function togglePause() {
+  if (!gs.active) return;
+  gs.paused = !gs.paused;
+  const t = I18N[curLang];
+  document.getElementById('pauseBtn').innerText = gs.paused ? t.resume : t.pause;
+  if (!gs.paused) requestAnimationFrame(renderLoop);
+}
+
+function startGame() {
+  document.getElementById('mainMenu').style.display = 'none';
+  document.getElementById('resultModal').style.display = 'none';
+  document.getElementById('hud').style.display = 'flex';
+  document.getElementById('bottomBar').style.display = 'flex';
+
+  gs.active = true; gs.paused = false; gs.score = 0;
+  gs.vibe = cfg.cure === 'aged' ? 100 : 85;
+  gs.badTrip = false;
+  gs.combo = cfg.cure === 'quantum' ? 4 : 1;
+  gs.maxCombo = gs.combo; gs.grazeCount = 0; gs.skillCharge = 100;
+  gs.stageIdx = 0; gs.items = []; gs.particles = []; gs.trail = [];
+  gs.floatingTexts = []; gs.lasers = [];
+  gs.bossLaser = { state: 'idle', x: width / 2, timer: 0 };
+
+  canvas.classList.remove('wave-indica', 'bad-trip-fx');
+  if (cfg.strain === 'indica') canvas.classList.add('wave-indica');
+
+  initAudioSystem();
+  setupStage(0);
+  chargeSkill(0);
+  requestAnimationFrame(renderLoop);
+}
+
+function setupStage(idx) {
+  gs.stageIdx = idx; gs.stageProgress = 0;
+  gs.invincibleUntil = performance.now() + 2200;
+  gs.items = [];
+
+  const meta = STAGE_META[idx];
+  const diffMult = cfg.diff === 'easy' ? 0.7 : (cfg.diff === 'hard' ? 1.35 : 1);
+  gs.stageTarget = meta.goalType === 'boss' ? 100 : Math.max(5, Math.round(meta.baseTarget * diffMult));
+
+  flashScreen(meta.c1);
+  canvas.classList.remove('spin-burst'); void canvas.offsetWidth; canvas.classList.add('spin-burst');
+  playSFX(330, 920, 0.35, 'triangle');
+
+  const t = I18N[curLang];
+  const quote = t.quotes[cfg.avatar][idx] || t.quotes[cfg.avatar][0];
+  showNarrative(quote);
+  addFloatText(`🚀 ${t.stages[idx].name}`, width / 2, height / 2 - 40, "#00f3ff");
+  updateHUD();
+}
+
+function advanceStage(amount) {
+  gs.stageProgress += amount;
+  const maxStages = cfg.diff === 'easy' ? 3 : 5;
+  if (gs.stageProgress >= gs.stageTarget) {
+    if (gs.stageIdx + 1 >= maxStages) { endGame(true); return; }
+    else setupStage(gs.stageIdx + 1);
+  }
+  updateHUD();
+}
+
+function chargeSkill(amt) {
+  const mult = cfg.cure === 'fresh' ? 1.5 : 1.0;
+  gs.skillCharge = Math.min(100, gs.skillCharge + amt * mult);
+  const btn = document.getElementById('skillBtn');
+  const t = I18N[curLang];
+  if (gs.skillCharge >= 100) {
+    btn.classList.add('ready');
+    btn.innerText = t.skillReady;
+  } else {
+    btn.classList.remove('ready');
+    btn.innerText = t.skillCharging(Math.floor(gs.skillCharge));
+  }
+}
+
+function triggerSkill() {
+  if (gs.skillCharge < 100 || !gs.active || gs.paused) return;
+  gs.skillCharge = 0; chargeSkill(0);
+
+  flashScreen("#00f3ff"); gs.screenShake = 15;
+  playSFX(440, 1320, 0.32, 'sawtooth');
+  addFloatText(I18N[curLang].skills[cfg.avatar], gs.playerX, height - 165, "#00ff66");
+
+  if (cfg.avatar === 'dog') {
+    gs.items.forEach(it => { if (it.type === 'bad') { spawnParticles(it.x, it.y, "#ff0055", 12); gs.score += 300; } });
+    gs.items = gs.items.filter(it => it.type !== 'bad');
+  } else if (cfg.avatar === 'cat') {
+    gs.items.forEach(it => { if (it.type !== 'bad') { it.x = gs.playerX; it.y = height - 115; } });
+  } else if (cfg.avatar === 'human') {
+    gs.vibe = 100; gs.invincibleUntil = performance.now() + 3000;
+  } else if (cfg.avatar === 'alien') {
+    gs.items.forEach(it => { if (it.type === 'bad') { it.type = 'good'; spawnParticles(it.x, it.y, "#ffe600", 10); } });
+  }
+  updateHUD();
+}
+
+function updateHUD() {
+  const t = I18N[curLang];
+  const stText = t.stages[gs.stageIdx];
+  document.getElementById('scoreVal').innerText = Math.floor(gs.score);
+  document.getElementById('comboVal').innerText = `🔥 COMBO x${gs.combo}`;
+  document.getElementById('vibeBar').style.width = `${Math.max(0, Math.min(100, gs.vibe))}%`;
+  document.getElementById('subInfo').innerText = `${cfg.strain.toUpperCase()} | ${cfg.genre.toUpperCase()} | THC ${cfg.thc}%`;
+
+  const maxSt = cfg.diff === 'easy' ? 3 : 5;
+  document.getElementById('stageTitle').innerText = `(${gs.stageIdx + 1}/${maxSt}) ${stText.name}`;
+  document.getElementById('missionDesc').innerText = stText.desc(gs.stageProgress, gs.stageTarget);
+  document.getElementById('stageProgBar').style.width = `${Math.min(100, (gs.stageProgress / gs.stageTarget) * 100)}%`;
+
+  const statusEl = document.getElementById('tripStatus');
+  const hintEl = document.getElementById('vibeHint');
+  if (gs.vibe <= 0) { endGame(false); return; }
+  else if (gs.vibe < 35) {
+    gs.badTrip = true; canvas.classList.add('bad-trip-fx');
+    statusEl.innerText = t.badTrip; statusEl.style.color = "#ff0055";
+    hintEl.innerText = t.vibeDanger;
+  } else {
+    gs.badTrip = false; canvas.classList.remove('bad-trip-fx');
+    statusEl.innerText = t.happyTrip; statusEl.style.color = "#00ff66";
+    hintEl.innerText = t.vibeNormal;
+  }
+}
+
+function endGame(victory) {
+  gs.active = false;
+  stopAllAudio();
+  document.getElementById('ytRadioWidget').style.display = 'none';
+  canvas.classList.remove('bad-trip-fx', 'wave-indica');
+
+  const finalScore = Math.floor(gs.score);
+  const t = I18N[curLang];
+  if (finalScore > savedHighScore) {
+    savedHighScore = finalScore;
+    localStorage.setItem('cybertrip_best', savedHighScore);
+    document.getElementById('highScoreBadge').innerText = `${t.bestRecord}${savedHighScore}`;
+  }
+
+  document.getElementById('resultModal').style.display = 'flex';
+  const title = document.getElementById('resTitle');
+  const desc = document.getElementById('resDesc');
+  const rank = document.getElementById('resRank');
+
+  if (victory) {
+    title.innerText = t.winTitle; title.style.color = "#00ff66";
+    desc.innerText = t.winDesc;
+    rank.innerText = finalScore > 35000 ? "🏆 RANK: SSS" : (finalScore > 18000 ? "🌟 RANK: S" : "✨ RANK: A");
+  } else {
+    title.innerText = t.loseTitle; title.style.color = "#ff0055";
+    desc.innerText = t.loseDesc;
+    rank.innerText = "💀 RANK: F (COUCH-LOCKED)";
+  }
+
+  document.getElementById('resScore').innerText = finalScore;
+  document.getElementById('resDetail').innerText = curLang === 'zh'
+    ? `最高連擊：${gs.maxCombo}x ｜ 驚險擦彈：${gs.grazeCount} 次 ｜ 難度：${cfg.diff.toUpperCase()}`
+    : `Max Combo: ${gs.maxCombo}x | Grazes: ${gs.grazeCount} | Mode: ${cfg.diff.toUpperCase()}`;
+  document.getElementById('resSeed').innerText = `🧬 SEED: CT4-${cfg.strain.toUpperCase()}-${cfg.thc}-${cfg.avatar.toUpperCase()}-${cfg.genre.toUpperCase()}`;
+}
+
+function quitToMenu() {
+  gs.active = false;
+  stopAllAudio();
+  document.getElementById('ytRadioWidget').style.display = 'none';
+  canvas.classList.remove('bad-trip-fx', 'wave-indica');
+  document.getElementById('hud').style.display = 'none';
+  document.getElementById('bottomBar').style.display = 'none';
+  document.getElementById('resultModal').style.display = 'none';
+  document.getElementById('mainMenu').style.display = 'flex';
+}
+
+// ==================== 5. 幾何背景與遊戲渲染引擎 ====================
+function drawBackgroundAndBoss(t, meta) {
+  ctx.fillStyle = cfg.strain === 'indica' ? "rgba(6, 2, 16, 0.24)" : "rgba(5, 1, 14, 0.38)";
+  ctx.fillRect(0, 0, width, height);
+
+  const cx = width / 2, cy = height / 2;
+  beatPulse *= 0.88;
+  const pulseScale = 1 + beatPulse * 0.18;
+
+  ctx.save();
+  if (gs.screenShake > 0) {
+    ctx.translate((Math.random() - 0.5) * gs.screenShake, (Math.random() - 0.5) * gs.screenShake);
+    gs.screenShake *= 0.85; if (gs.screenShake < 0.5) gs.screenShake = 0;
+  }
+
+  if (meta.bgType === 'cyber_grid') {
+    const grad = ctx.createLinearGradient(0, cy - 170, 0, cy + 20);
+    grad.addColorStop(0, "#ff007f"); grad.addColorStop(1, "#ffe600");
+    ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(cx, cy - 60, 90 * pulseScale, 0, Math.PI * 2); ctx.fill();
+
+    ctx.strokeStyle = meta.c2; ctx.lineWidth = 1.5 + beatPulse * 2;
+    for (let i = -10; i <= 10; i++) {
+      ctx.beginPath(); ctx.moveTo(cx + i * 25, cy); ctx.lineTo(cx + i * 185, height); ctx.stroke();
+    }
+    const off = (t * 0.16) % 40;
+    for (let y = cy; y < height; y += 35) {
+      ctx.beginPath(); ctx.moveTo(0, y + off); ctx.lineTo(width, y + off); ctx.stroke();
+    }
+  } else if (meta.bgType === 'sine_wave') {
+    for (let w = 0; w < 6; w++) {
+      ctx.beginPath(); ctx.strokeStyle = w % 2 === 0 ? meta.c1 : meta.c2;
+      ctx.lineWidth = 2.5 + beatPulse * 3;
+      for (let x = 0; x <= width; x += 24) {
+        const y = cy + Math.sin(x * 0.01 + t * 0.004 + w) * (65 + w * 24) * pulseScale;
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+  } else if (meta.bgType === 'hex_tunnel') {
+    ctx.beginPath(); ctx.arc(cx, cy, 35 * pulseScale, 0, Math.PI * 2);
+    ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3; ctx.stroke();
+    for (let r = 1; r <= 7; r++) {
+      const rad = ((t * 0.26 + r * 90) % 630) * (1 + beatPulse * 0.06);
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(t * 0.0012 * (r % 2 === 0 ? 1 : -1));
+      ctx.strokeStyle = r % 2 === 0 ? meta.c1 : meta.c2; ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      for (let s = 0; s <= 6; s++) {
+        const a = s * Math.PI / 3;
+        if (s === 0) ctx.moveTo(Math.cos(a) * rad, Math.sin(a) * rad);
+        else ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
+      }
+      ctx.stroke(); ctx.restore();
+    }
+  } else if (meta.bgType === 'mandala') {
+    ctx.save(); ctx.translate(cx, cy);
+    for (let i = 0; i < 12; i++) {
+      ctx.rotate((Math.PI * 2) / 12);
+      ctx.strokeStyle = i % 2 === 0 ? meta.c1 : meta.c2; ctx.lineWidth = 2 + beatPulse * 2;
+      const p = (135 + Math.sin(t * 0.005) * 55) * pulseScale;
+      ctx.beginPath(); ctx.ellipse(p * 0.6, 0, p, 45, t * 0.002, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+  } else if (meta.bgType === 'boss_void') {
+    gs.bossX = cx + Math.sin(t * 0.0022) * (width * 0.3);
+    const bossY = 135;
+
+    gs.bossLaser.timer++;
+    if (gs.bossLaser.state === 'idle' && gs.bossLaser.timer > 110) {
+      gs.bossLaser.state = 'warn'; gs.bossLaser.x = gs.playerX; gs.bossLaser.timer = 0;
+      playSFX(880, 440, 0.2, 'sine');
+    } else if (gs.bossLaser.state === 'warn') {
+      ctx.strokeStyle = `rgba(255, 0, 68, ${0.3 + Math.sin(t * 0.03) * 0.3})`;
+      ctx.lineWidth = 6; ctx.setLineDash([12, 8]);
+      ctx.beginPath(); ctx.moveTo(gs.bossLaser.x, bossY + 40); ctx.lineTo(gs.bossLaser.x, height); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#ff0044"; ctx.font = "bold 16px sans-serif"; ctx.textAlign = "center";
+      ctx.fillText(I18N[curLang].laserWarn, gs.bossLaser.x, height - 165);
+
+      if (gs.bossLaser.timer > 68) {
+        gs.bossLaser.state = 'fire'; gs.bossLaser.timer = 0; gs.screenShake = 12;
+        playSFX(180, 55, 0.35, 'sawtooth');
+      }
+    } else if (gs.bossLaser.state === 'fire') {
+      ctx.fillStyle = "rgba(255, 0, 85, 0.85)"; ctx.shadowColor = "#ff0055"; ctx.shadowBlur = 30;
+      ctx.fillRect(gs.bossLaser.x - 28, bossY + 40, 56, height);
+      if (Math.abs(gs.playerX - gs.bossLaser.x) < 42 && t > gs.invincibleUntil) {
+        gs.vibe -= (cfg.cure === 'aged' ? 0.8 : 1.5); gs.combo = 1; updateHUD();
+      }
+      if (gs.bossLaser.timer > 28) { gs.bossLaser.state = 'idle'; gs.bossLaser.timer = 0; }
+    }
+
+    ctx.shadowColor = "#ff0033"; ctx.shadowBlur = 35; ctx.fillStyle = "#220011"; ctx.strokeStyle = "#ff0055"; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.ellipse(gs.bossX, bossY, 105 * pulseScale, 52 * pulseScale, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#ff0033"; ctx.beginPath(); ctx.arc(gs.bossX, bossY, 30, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(gs.bossX, bossY, 13, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function renderLoop(t) {
+  if (!gs.active || gs.paused) return;
+
+  const meta = STAGE_META[gs.stageIdx];
+  drawBackgroundAndBoss(t, meta);
+
+  const diffSpd = cfg.diff === 'easy' ? 0.8 : (cfg.diff === 'hard' ? 1.35 : 1);
+  const strainSpd = cfg.strain === 'sativa' ? 1.22 : (cfg.strain === 'indica' ? 0.78 : 1.0);
+  const fallSpeed = 5.2 * diffSpd * strainSpd * (1 + cfg.thc / 160);
+
+  if (Math.random() < 0.075 * diffSpd) {
+    const r = Math.random();
+    let type = 'good';
+    const badProb = (cfg.thc / 230) + (cfg.diff === 'hard' ? 0.14 : 0);
+    if (meta.goalType === 'boss' && r > 0.62) type = 'star';
+    else if (r < badProb) type = 'bad';
+    else if (r > 0.90) type = 'cbd';
+
+    const startX = Math.random() * (width - 140) + 70;
+    gs.items.push({ x: startX, baseX: startX, y: meta.goalType === 'boss' ? 150 : -40, vy: fallSpeed + Math.random()*2.2, phase: Math.random()*Math.PI*2, type, grazed: false });
+  }
+
+  const sway = Math.sin(t * 0.005) * (cfg.thc * 0.2);
+  let desiredX = gs.targetX + sway;
+  if (meta.bgType === 'hex_tunnel') desiredX += (width / 2 - gs.playerX) * 0.08;
+  gs.playerX += (desiredX - gs.playerX) * (cfg.strain === 'indica' ? 0.075 : 0.16);
+  gs.playerX = Math.max(40, Math.min(width - 40, gs.playerX));
+  const playerY = height - 105;
+
+  const cloneOffsets = meta.bgType === 'mandala' ? [-110, 0, 110] : [0];
+
+  gs.trail.push({ x: gs.playerX, y: playerY });
+  if (gs.trail.length > 14) gs.trail.shift();
+  for (let i = 0; i < gs.trail.length; i++) {
+    const tr = gs.trail[i], ratio = i / gs.trail.length;
+    ctx.fillStyle = gs.badTrip ? `rgba(255, 0, 68, ${ratio * 0.45})` : `rgba(0, 243, 255, ${ratio * 0.45})`;
+    ctx.beginPath(); ctx.arc(tr.x, tr.y + (14 - i) * 4, 24 * ratio, 0, Math.PI * 2); ctx.fill();
+  }
+
+  for (let i = gs.items.length - 1; i >= 0; i--) {
+    const it = gs.items[i];
+    it.y += it.vy;
+    if (meta.bgType === 'sine_wave') it.x = it.baseX + Math.sin(it.y * 0.022 + it.phase) * 75;
+    else if (meta.bgType === 'hex_tunnel') it.x += (width / 2 - it.x) * 0.008;
+
+    ctx.font = "35px sans-serif"; ctx.textAlign = "center";
+    if (it.type === 'good') { ctx.shadowColor = "#00f3ff"; ctx.shadowBlur = 15; ctx.fillText("✨", it.x, it.y); }
+    else if (it.type === 'bad') { ctx.shadowColor = "#ff0033"; ctx.shadowBlur = 20; ctx.fillText("👁️", it.x, it.y); }
+    else if (it.type === 'cbd') { ctx.shadowColor = "#00ff66"; ctx.shadowBlur = 18; ctx.fillText("🌿", it.x, it.y); }
+    else if (it.type === 'star') { ctx.shadowColor = "#ffe600"; ctx.shadowBlur = 22; ctx.fillText("🌟", it.x, it.y); }
+
+    let hitGood = false;
+    for (const off of cloneOffsets) {
+      if (Math.hypot(it.x - (gs.playerX + off), it.y - playerY) < 48) { hitGood = true; break; }
+    }
+    const distMain = Math.hypot(it.x - gs.playerX, it.y - playerY);
+
+    if ((it.type !== 'bad' && hitGood) || (it.type === 'bad' && distMain < 46)) {
+      const thcMult = 1 + (cfg.thc / 45), diffMult = cfg.diff === 'hard' ? 3 : 1, badBonus = gs.badTrip ? 2.5 : 1.0;
+
+      if (it.type === 'good') {
+        const pts = Math.round(100 * gs.combo * thcMult * diffMult * badBonus);
+        gs.score += pts; gs.combo = Math.min(16, gs.combo + 1); gs.maxCombo = Math.max(gs.maxCombo, gs.combo);
+        gs.vibe = Math.min(100, gs.vibe + 4); chargeSkill(14);
+        spawnParticles(it.x, it.y, "#00f3ff", 16); playSFX(440 + gs.combo * 32, 880 + gs.combo * 40, 0.11, 'sine');
+        addFloatText(`+${pts}${gs.badTrip ? ' (2.5x!)' : ''}`, it.x, it.y, "#00f3ff");
+        if (meta.goalType !== 'boss') advanceStage(1);
+      } else if (it.type === 'star') {
+        gs.score += 1200 * gs.combo;
+        gs.lasers.push({ x1: gs.playerX, y1: playerY, x2: gs.bossX, y2: 135, alpha: 1.0 });
+        gs.screenShake = 10; chargeSkill(25); spawnParticles(gs.bossX, 135, "#ffe600", 28);
+        playSFX(620, 1550, 0.25, 'sawtooth');
+        addFloatText("💥 PHOTON CANNON! (-25% HP)", gs.bossX, 190, "#ffe600");
+        advanceStage(25);
+      } else if (it.type === 'cbd') {
+        gs.vibe = Math.min(100, gs.vibe + 32); gs.score += 600; chargeSkill(20);
+        flashScreen("#00ff66"); spawnParticles(it.x, it.y, "#00ff66", 20);
+        playSFX(523, 1046, 0.22, 'triangle');
+        addFloatText("🌿 CBD +32% VIBE!", it.x, it.y, "#00ff66");
+      } else if (it.type === 'bad') {
+        if (t > gs.invincibleUntil) {
+          const dmg = cfg.cure === 'aged' ? 12 : 24;
+          gs.vibe -= dmg; gs.combo = 1; gs.screenShake = 14;
+          flashScreen("#ff0033"); spawnParticles(it.x, it.y, "#ff0044", 24);
+          playSFX(150, 42, 0.28, 'sawtooth');
+          addFloatText(`💥 -${dmg}% VIBE`, it.x, it.y, "#ff0055");
+        } else {
+          addFloatText("🛡️ SHIELDED!", it.x, it.y, "#00ffaa");
+        }
+      }
+      updateHUD(); gs.items.splice(i, 1); continue;
+    }
+
+    if (it.type === 'bad' && !it.grazed && distMain >= 46 && distMain < 94) {
+      it.grazed = true; gs.grazeCount++;
+      const gPts = Math.round(500 * gs.combo * (gs.badTrip ? 2.5 : 1));
+      gs.score += gPts; chargeSkill(28); spawnParticles(it.x, it.y, "#ffe600", 8);
+      playSFX(950, 1480, 0.08, 'sine');
+      addFloatText(`⚡ GRAZE! +${gPts} (MP+28%)`, it.x, it.y - 20, "#ffe600");
+      updateHUD();
+    }
+    if (it.y > height + 50) gs.items.splice(i, 1);
+  }
+
+  for (let i = gs.particles.length - 1; i >= 0; i--) {
+    const p = gs.particles[i]; p.x += p.vx; p.y += p.vy; p.alpha -= 0.032;
+    ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(0, p.alpha);
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1.0; if (p.alpha <= 0) gs.particles.splice(i, 1);
+  }
+
+  for (let i = gs.lasers.length - 1; i >= 0; i--) {
+    const ls = gs.lasers[i];
+    ctx.strokeStyle = `rgba(255, 230, 0, ${ls.alpha})`; ctx.lineWidth = 12;
+    ctx.beginPath(); ctx.moveTo(ls.x1, ls.y1); ctx.lineTo(ls.x2, ls.y2); ctx.stroke();
+    ls.alpha -= 0.06; if (ls.alpha <= 0) gs.lasers.splice(i, 1);
+  }
+
+  cloneOffsets.forEach(off => {
+    ctx.save(); ctx.translate(gs.playerX + off, playerY);
+    if (off !== 0) ctx.globalAlpha = 0.55;
+    const tilt = (gs.targetX - gs.playerX) * 0.0045;
+    ctx.rotate(Math.max(-0.48, Math.min(0.48, tilt)));
+    ctx.strokeStyle = t < gs.invincibleUntil ? "#ffe600" : (gs.badTrip ? "#ff0044" : "#00f3ff");
+    ctx.lineWidth = 3 + beatPulse * 3;
+    ctx.beginPath(); ctx.arc(0, 0, 38 + beatPulse * 6, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowColor = gs.badTrip ? "#ff0033" : "#00f3ff"; ctx.shadowBlur = 25;
+    ctx.font = "54px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(AVATAR_ICONS[cfg.avatar], 0, 0);
+    ctx.restore();
+  });
+
+  for (let i = gs.floatingTexts.length - 1; i >= 0; i--) {
+    const ft = gs.floatingTexts[i]; ft.y += ft.vy; ft.alpha -= 0.022;
+    ctx.save(); ctx.font = "bold 19px sans-serif"; ctx.fillStyle = ft.color;
+    ctx.globalAlpha = Math.max(0, ft.alpha); ctx.textAlign = "center";
+    ctx.fillText(ft.text, ft.x, ft.y); ctx.restore();
+    if (ft.alpha <= 0) gs.floatingTexts.splice(i, 1);
+  }
+
+  if (gs.active && !gs.paused) requestAnimationFrame(renderLoop);
+}
+
+applyTranslations();
+</script>
+</body>
+</html>
+```
