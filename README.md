@@ -1,55 +1,14 @@
-# 🧬 CyberTrip 4.0: The Akashic Ascension (阿卡西飛升計畫)
+這份是將先前的 **3 大 RCA 根因修復（支援點擊/觸控即移、關卡防卡死機制、非同步音訊載入不卡幀）**、**7 大 UI/UX 與難度優化**，以及**高穩定度全球 HTTPS 電台串流（SomaFM 128k MP3 標準串流 + Nightride FM + 3 秒逾時自動備援）**全部整合完畢的最終正式版 **`index.html`**。
 
-[![Play Online](https://img.shields.io/badge/🎮_Play_Now-GitHub_Pages-00f3ff?style=for-the-badge)](https://YOUR_GITHUB_USERNAME.github.io/cybertrip/)
-[![Language](https://img.shields.io/badge/🌐_Language-English_%7C_繁體中文-ff007f?style=for-the-badge)](#)
-[![Audio](https://img.shields.io/badge/📻_Audio-24/7_Global_Genre_Radio_%2B_Web_Synth-00ff66?style=for-the-badge)](#)
+### ✅ 本次最終版落實重點：
+1. **RCA 徹底根除（極致流暢）：**
+   * **全相容操控：** 綁定 `pointerdown` 與 `pointermove`，無論電腦滑鼠移動、點擊，或手機單點、滑動，角色皆可瞬間精準移動（自動避開頂部與底部按鈕防誤觸）。
+   * **空白鍵與連擊防呆：** 強制 `e.preventDefault()` 攔截空白鍵滾動；Stage 3 引力極度溫和化，絕不卡關。
+2. **全球電台直連高穩定化：**
+   * 全部改用支援全瀏覽器原生解碼的 **HTTPS MP3 標準直播流（SomaFM 官方全天候節點 + Nightride FM）**，並設有 **3.5 秒自動Watchdog偵測**：若單一節點因網路問題未響應，自動切下一台或無縫啟動 Web 合成器，確保音樂 100% 順暢不中斷且絕不阻塞遊戲畫面。
+3. **手機版極簡 HUD + 開局 3 秒直覺圖解卡 + 紅綠光環：**
+   * 頂部改為超薄單行 HUD，拔除所有角色廢話語錄；掉落物自帶**🟢安全光圈**與**🔴危險尖刺紅圈**；開局自動浮現 3 秒「吃/躲」視覺導覽卡。
+4. **煉金室文字瘦身 + 角色真實量化屬性 + 真實地獄難度：**
+   * 角色具備真實物理加成（邊牧敏捷+30%、折耳貓受擊判定-25%、太空人血量上限130、外星人好球率+15%）；地獄難度具備高速追蹤魔眼與雙重高速雷射！
 
-> **A Psychedelic Cyber-Runner & Audio-Visual Experience.**  
-> **結合賽博龐克、24/7 全球前衛音樂電台與多維度物理機制的太空跑酷闖關遊戲。**
-
----
-
-## 🌌 Story & Lore | 故事背景
-
-**2142 AD — The Akashic Ascension.**  
-Mega-corporation **OmniCorp** has locked all sentient dreams behind an algorithmic firewall. As an awakened cosmic traveler (a Border Collie, Cyber Fold Cat, Psychonaut, or 4D Alien), you enter the **Cyber Dispensary** to formulate a forbidden quantum herbal recipe. Once ignited, you launch into a **Hyper Flying Trip** across 5 distinct dimensional laws to shatter the final boss—**The All-Seeing Paranoia Eye**—and free the multiverse!
-
-**西元 2142 年 — 阿卡西飛升計畫。**  
-賽博巨企「OmniCorp」用演算法封鎖了全宇宙生物的潛意識夢境。身為覺醒的宇宙穿越者（邊境牧羊犬、賽博折耳貓、意識潛行者或四維外星生物），你將在「賽博煉金室」調配專屬的草本配方（Sativa / Indica、THC 濃度、熟成發酵），點火後進入 **Hyper Flying Trip**！一路突破 5 個物理規則截然不同的時空維度，擊敗最終心魔 Boss「妄想全視之眼」，解放全宇宙的自由意志！
-
----
-
-## ✨ Key Features | 核心特色
-
-* 📻 **24/7 Global Genre Radio (全球四大曲風直播電台直連):**
-  * No copyright blocks, no manual searching. Pick your genre and stream live 24/7 underground electronic stations directly inside the game (with built-in Web Synth fallback):
-  * 🛸 **Psytrance:** *Hirschmilch Psytrance / SomaFM Suburbs of Goa*
-  * 🦾 **Cyberpunk:** *Nightride FM Darksynth / SomaFM DEF CON Radio*
-  * 🌸 **Psych Indie:** *SomaFM Indie Pop Rocks! / SomaFM Lush*
-  * ⚙️ **Acid Techno:** *Hirschmilch Electronic / SomaFM CLIQhop*
-* 🧪 **The Cyber Dispensary (煉金配方系統):**
-  * **Genetics (麻草基因):** **Sativa** (hyper-speed & agile), **Indica** (liquid slow-motion & wave distortion), or **Hybrid**.
-  * **THC Potency (濃度拉桿 15%~99%):** Higher THC grants massive score multipliers but increases visual sway and dark matter spawns.
-  * **Curing Process (熟成天賦):** Fresh Bud (+50% MP charge), 60-Day Cured (50% damage reduction), or Quantum Cure (Start at 4x Combo).
-* 🐾 **4 Cosmic Avatars & Ultimate Skills (四大角色與專屬大招):**
-  * 🐶 **Border Collie (邊境牧羊犬):** *Sonic Bark* — Shatters all dark matter eyes on screen.
-  * 🐱 **Cyber Fold Cat (賽博折耳貓):** *Quantum Magnet* — Pulls all orbs and star seeds to your position.
-  * 🧑‍🚀 **Psychonaut (意識潛行者):** *Deep Breath* — Instantly restores Vibe to 100% + 3s invincible shield.
-  * 👽 **4D Alien (四維外星人):** *Dimension Fold* — Converts all dangerous Dark Eyes into golden dopamine orbs.
-* 🌀 **5 Distinct Dimensional Stages & Boss Fight (五大維度專屬物理與終極 Boss 戰):**
-  * **Stage 1 (Neon Horizon):** Retro-futuristic 3D grid & sun pulse.
-  * **Stage 2 (Sine-Wave Ocean):** Falling orbs slither left and right along harmonic soundwaves.
-  * **Stage 3 (Hex Gravity Matrix):** A central singularity pulls objects toward the middle.
-  * **Stage 4 (Mandala Mirror):** Summons Twin Mirror Clones to catch orbs across lanes.
-  * **Stage 5 (The Paranoia Eye Boss):** Dodge telegraphed red sweep lasers and grab 🌟 Star Seeds to fire photon cannons!
-* 🌐 **Bilingual Support (中/英雙語即時切換):** One-click toggle between English and Traditional Chinese (`🌐 EN / 繁中`).
-
----
-
-## 🕹️ Controls & Mechanics | 操作與進階技巧
-
-* **Move / Dodge (移動閃避):** Move your **Mouse** or **Touch & Drag** left/right.
-* **Ultimate Skill (釋放大招):** Press **`[SPACE]`** or tap the bottom Skill Button when MP reaches `100%`.
-* **Pause (暫停):** Press **`[P]`**.
-* **⚡ Graze Mechanic (驚險擦彈):** Skim closely past `👁️ Dark Eyes` without touching them for **`+500 GRAZE`** bonus points and **`+28% MP`** charge!
-* **👁️ Bad Trip Bloodlust (狂暴雙面刃):** Dropping below 35% Vibe triggers a **Bad Trip** (inverted glitch visuals), granting a **2.5x Score Multiplier** at high risk! Grab `🌿 CBD Leaves` to heal.
+請直接複製以下完整程式碼覆蓋你的 **`index.html`**：
