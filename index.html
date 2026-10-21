@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>CyberTrip 4.0: The Akashic Ascension</title>
+<title>CyberTrip：阿卡西飛升 | The Akashic Ascension</title>
 <style>
   :root {
     --cyan: #00f3ff;
@@ -35,8 +35,12 @@
   }
   .flash-overlay {
     position: absolute; inset: 0; background: #fff; opacity: 0;
-    pointer-events: none; transition: opacity 0.1s; z-index: 6;
+    pointer-events: none; transition: opacity 0.12s; z-index: 6;
   }
+  /* 減少閃爍模式：關掉所有閃動動畫 */
+  body.low-flash .spin-burst { animation: none; }
+  body.low-flash .skill-btn.ready { animation: none; }
+  body.low-flash .flash-overlay { display: none; }
 
   /* ---------- 選單 ---------- */
   .overlay-screen {
@@ -55,16 +59,20 @@
     max-height: 96vh; overflow-y: auto;
   }
   .title-bar {
-    display: flex; justify-content: space-between; align-items: center;
+    display: flex; justify-content: space-between; align-items: flex-start;
     border-bottom: 1px solid rgba(0, 243, 255, 0.3);
-    padding-bottom: 8px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;
+    padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;
   }
+  .title-wrap { display: flex; flex-direction: column; gap: 2px; }
+  .title-line { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   .main-title {
-    font-size: 1.4rem; margin: 0;
+    font-size: 1.6rem; margin: 0; letter-spacing: 0.02em;
     background: linear-gradient(90deg, var(--green), var(--cyan), var(--pink));
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent;
   }
+  .sub-title { font-size: 1.05rem; font-weight: bold; color: #ff7ac0; letter-spacing: 0.18em; }
+  .tagline { font-size: 0.78rem; color: #b9a8d9; }
   .top-btn-group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .high-score-tag {
     font-size: 0.78rem; color: var(--yellow);
@@ -73,10 +81,11 @@
   }
   .btn-top {
     background: rgba(0, 243, 255, 0.15); border: 1px solid var(--cyan); color: var(--cyan);
-    padding: 5px 11px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 0.78rem;
+    padding: 5px 11px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 0.78rem; font-family: inherit;
   }
   .btn-top:hover { background: var(--cyan); color: #000; }
   .btn-lang { background: linear-gradient(45deg, rgba(255,0,127,0.3), rgba(0,243,255,0.3)); border-color: var(--pink); color: #fff; }
+  .btn-flash.on { background: rgba(255, 230, 0, 0.18); border-color: var(--yellow); color: var(--yellow); }
 
   .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   @media (max-width: 680px) { .grid-2col { grid-template-columns: 1fr; } }
@@ -88,6 +97,7 @@
   }
   .step-title { font-size: 0.86rem; font-weight: bold; color: var(--cyan); margin-bottom: 7px; display: block; }
   .btn-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 6px; }
+  .btn-row.two { grid-template-columns: 1fr 1fr; }
   .opt-btn {
     background: #150c28; border: 1px solid #3c256e; color: #ddd;
     padding: 8px 4px; border-radius: 8px; cursor: pointer;
@@ -100,14 +110,12 @@
     border: 2px solid var(--green); color: #fff;
     box-shadow: 0 0 10px rgba(0, 255, 102, 0.35);
   }
-  /* 量化屬性標籤 */
   .chips { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; margin-top: 5px; }
   .chip { font-size: 0.66rem; padding: 1px 5px; border-radius: 6px; font-weight: bold; white-space: nowrap; }
   .chip.up { color: #00ff66; background: rgba(0, 255, 102, 0.12); }
   .chip.down { color: #ff5c85; background: rgba(255, 0, 68, 0.14); }
   .chip.neutral { color: #bbb; background: rgba(255, 255, 255, 0.08); }
 
-  /* 音樂：主選項（分段切換）→ 曲風子面板 */
   .seg {
     display: grid; grid-template-columns: 1fr 1fr; gap: 3px;
     background: #0d0620; border: 1px solid #3c256e; border-radius: 12px; padding: 3px;
@@ -133,8 +141,13 @@
     border: none; border-radius: 50px; cursor: pointer; margin-top: 4px;
     box-shadow: 0 0 20px rgba(0, 255, 102, 0.5); font-family: inherit;
   }
+  .ghost-btn {
+    width: 100%; padding: 11px; font-size: 0.95rem; font-weight: bold; color: var(--yellow);
+    background: transparent; border: 1px solid var(--yellow); border-radius: 50px; cursor: pointer;
+    margin-top: 8px; font-family: inherit;
+  }
 
-  /* ---------- 遊戲內 HUD：單列、極簡 ---------- */
+  /* ---------- 遊戲內 HUD ---------- */
   #hud {
     position: absolute;
     top: calc(6px + env(safe-area-inset-top, 0px));
@@ -168,14 +181,13 @@
   }
   .mini-ctrl-btn:hover { background: var(--cyan); color: #000; }
 
-  /* 底部：電台控制＋技能 */
   #bottomBar {
     position: absolute;
     bottom: calc(10px + env(safe-area-inset-bottom, 0px));
     left: 50%; transform: translateX(-50%);
     z-index: 20; display: none; align-items: center; gap: 6px;
     background: rgba(8, 3, 18, 0.72); border: 1px solid rgba(0, 243, 255, 0.35);
-    border-radius: 30px; padding: 4px 6px 4px 10px; white-space: nowrap;
+    border-radius: 30px; padding: 4px 6px; white-space: nowrap; max-width: calc(100vw - 16px);
   }
   #radioStationLabel { font-size: 0.68rem; color: var(--green); max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
   .skill-btn {
@@ -192,13 +204,14 @@
   @media (max-width: 600px) {
     #hud { left: 6px; right: 6px; gap: 4px; }
     .hud-pill { padding: 3px 6px; }
-    .hud-left { flex-basis: 92px; }
+    .hud-left { flex-basis: 88px; }
     #scoreVal { font-size: 0.85rem; }
     .mini-ctrl-btn { padding: 2px 5px; font-size: 0.66rem; }
-    #radioStationLabel { display: none; }
+    #radioStationLabel { max-width: 92px; }
+    .main-title { font-size: 1.4rem; }
   }
 
-  /* ---------- 開局教學導覽 ---------- */
+  /* ---------- 教學導覽 ---------- */
   #tutorial {
     position: absolute; inset: 0; display: none;
     align-items: center; justify-content: center;
@@ -243,6 +256,9 @@
     background: rgba(255,255,255,0.04); padding: 10px 14px; border-radius: 10px;
     margin-bottom: 10px; border-left: 4px solid var(--pink); font-size: 0.88rem;
   }
+  .warn-box { border-color: var(--yellow); max-width: 460px; }
+  .warn-title { color: var(--yellow); margin: 0 0 10px; font-size: 1.2rem; }
+  .warn-body { font-size: 0.9rem; color: #ddd; margin: 0 0 14px; }
 </style>
 </head>
 <body>
@@ -252,7 +268,6 @@
   <div class="flash-overlay" id="flashOverlay"></div>
   <audio id="globalRadioPlayer" preload="none" style="display:none;"></audio>
 
-  <!-- 遊戲內 HUD -->
   <div id="hud">
     <div class="hud-pill hud-left">
       <div id="tripStatus">🌈 HAPPY</div>
@@ -266,20 +281,19 @@
       <div class="score-row"><span id="comboVal">x1</span><span id="scoreVal">0</span></div>
       <div class="hud-btns">
         <button class="mini-ctrl-btn" onclick="togglePause()" id="pauseBtn">⏸ 暫停</button>
-        <button class="mini-ctrl-btn" onclick="quitToMenu()" id="labBackBtn" style="border-color:var(--pink);">🧪</button>
+        <button class="mini-ctrl-btn" onclick="quitToMenu()" id="labBackBtn" style="border-color:var(--pink);">🧪 主畫面</button>
       </div>
     </div>
   </div>
 
-  <!-- 底部：電台＋技能 -->
+  <!-- 底部：聲音開關／電台名稱／下一首＋技能 -->
   <div id="bottomBar">
+    <button class="mini-ctrl-btn" onclick="toggleMuteAudio()" id="btnMuteAudio">🔊</button>
     <span id="radioStationLabel">📻</span>
     <button class="mini-ctrl-btn" onclick="switchRadioChannel()" id="btnNextStation">⏭️</button>
-    <button class="mini-ctrl-btn" onclick="toggleMuteAudio()" id="btnMuteAudio">🔊</button>
     <button class="skill-btn" id="skillBtn" onclick="triggerSkill()">⚡</button>
   </div>
 
-  <!-- 開局教學導覽 -->
   <div id="tutorial">
     <div class="tut-card">
       <div class="tut-title" id="tutTitle"></div>
@@ -295,10 +309,17 @@
   <div class="overlay-screen" id="mainMenu">
     <div class="panel">
       <div class="title-bar">
-        <h1 class="main-title" id="uiMainTitle">🧬 CyberTrip 4.0</h1>
+        <div class="title-wrap">
+          <div class="title-line">
+            <h1 class="main-title" id="uiMainTitle">🧬 CyberTrip</h1>
+            <span class="sub-title" id="uiSubTitle">阿卡西飛升</span>
+          </div>
+          <div class="tagline" id="uiTagline"></div>
+        </div>
         <div class="top-btn-group">
           <span class="high-score-tag" id="highScoreBadge">🏆 0</span>
           <button class="btn-top btn-lang" onclick="toggleLanguage()" id="langSwitchBtn">🌐 EN / 繁中</button>
+          <button class="btn-top btn-flash" onclick="toggleLowFlash()" id="flashToggleBtn">💡</button>
           <button class="btn-top" onclick="toggleGuide(true)" id="guideOpenBtn">📖</button>
         </div>
       </div>
@@ -322,7 +343,7 @@
             </div>
             <div class="sub-genre-panel">
               <span class="sub-genre-label" id="lblSubGenre"></span>
-              <div class="btn-row">
+              <div class="btn-row two">
                 <div class="opt-btn active" onclick="setGenre('psytrance',this)">🛸 Psytrance</div>
                 <div class="opt-btn" onclick="setGenre('cyberpunk',this)">🦾 Cyberpunk</div>
                 <div class="opt-btn" onclick="setGenre('indie',this)">🌸 Psych Indie</div>
@@ -377,6 +398,7 @@
   <div class="overlay-screen" id="guideModal" style="display:none; z-index:40;">
     <div class="modal-box">
       <h2 style="margin-top:0; color:var(--cyan);" id="guideTitle"></h2>
+      <div class="guide-section" style="border-left-color:var(--cyan);" id="guideSec0"></div>
       <div class="guide-section" id="guideSec1"></div>
       <div class="guide-section" style="border-left-color:var(--green);" id="guideSec2"></div>
       <div class="guide-section" style="border-left-color:var(--yellow);" id="guideSec3"></div>
@@ -398,6 +420,16 @@
       <button class="launch-btn" onclick="quitToMenu()" id="btnRetry"></button>
     </div>
   </div>
+
+  <!-- 光敏警示（首次進入顯示） -->
+  <div class="overlay-screen" id="photoWarn" style="display:none; z-index:60;">
+    <div class="modal-box warn-box">
+      <h2 class="warn-title" id="warnTitle"></h2>
+      <p class="warn-body" id="warnBody"></p>
+      <button class="launch-btn" onclick="acceptPhotoWarn(false)" id="warnContinue"></button>
+      <button class="ghost-btn" onclick="acceptPhotoWarn(true)" id="warnLowFlash"></button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -405,7 +437,6 @@
 const FRAME_MS = 1000 / 60;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const $ = id => document.getElementById(id);
-// 修正首頁空白：元素不存在時略過，不會讓整段翻譯中斷
 const setT = (id, txt) => { const el = $(id); if (el) el.innerText = txt; };
 const setH = (id, html) => { const el = $(id); if (el) el.innerHTML = html; };
 const safeStorage = {
@@ -413,15 +444,20 @@ const safeStorage = {
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 };
 const chips = list => `<div class="chips">${list.map(([c, txt]) => `<span class="chip ${c}">${txt}</span>`).join('')}</div>`;
+const hsl = (h, l = 60, a = 1) => `hsla(${((h % 360) + 360) % 360}, 100%, ${l}%, ${a})`;
 
 // ==================== 1. 雙語字典 ====================
 let curLang = 'zh';
 
 const I18N = {
   zh: {
-    mainTitle: "🧬 CyberTrip 4.0",
+    mainTitle: "🧬 CyberTrip",
+    subTitle: "阿卡西飛升",
+    tagline: "穿越五層意識維度，擊碎妄想全視之眼。",
     bestRecord: "🏆 最高 ",
     guideBtn: "📖 玩法",
+    flashOn: "💡 減少閃爍：開",
+    flashOff: "💡 減少閃爍：關",
     step1: "1. 品種",
     sativa: "🌿 Sativa", indica: "🍂 Indica", hybrid: "⚡ Hybrid",
     strainStats: {
@@ -453,9 +489,10 @@ const I18N = {
       aged: [['up', '減傷45%']],
       quantum: [['up', '開局連擊×4']]
     },
-    launch: "🔥 點火出發",
+    launch: "🔥 點火・開始飛升",
     pause: "⏸ 暫停",
     resume: "▶ 繼續",
+    labBtn: "🧪 主畫面",
     pausedText: "已暫停・點 ▶ 繼續",
     skillCharging: pct => `⚡ ${pct}%`,
     skillReady: "⚡ 放大招！",
@@ -463,8 +500,12 @@ const I18N = {
     badTrip: "👁️ ×2.5",
     laserWarn: "⚠️ 雷射！",
     miss: "MISS",
+    cloneHit: "分身受創",
     supportOrb: "🌟 支援光球",
     synthFallback: "📻 電台連不上，改用合成器",
+    bossPhase2: "⚠️ 第二階段・魔眼暴怒",
+    bossPhase3: "☠️ 最終階段・瞳孔失控",
+    bossDown: "💥 奇點崩解！",
     tutTitle: "🎮 怎麼玩",
     tutEatLbl: "吃",
     tutEat: '<span class="ico good">✨</span>過關 <span class="ico good">🌿</span>回血 <span class="ico gold">🌟</span>打 Boss',
@@ -473,31 +514,40 @@ const I18N = {
     tutGraze: '⚡ 從 <span class="ico bad">👁️</span> 旁邊擦過 → 充能大招',
     tutControl: "點擊或拖曳畫面移動・鍵盤 ← → 也可以",
     tutStart: n => `點一下開始（${n}）`,
-    guideTitle: "📖 玩法",
-    guideSec1: "<b>吃什麼、躲什麼</b><br>🟢 ✨ 光球：推進關卡　🌿 葉子：回血　🌟 星星：Boss 戰攻擊<br>🔴 👁️ 魔眼：碰到扣血；從旁邊擦過可以充能大招",
-    guideSec2: "<b>難度差異</b><br>🌱 簡單：3 關、魔眼少、有接球輔助<br>🚀 普通：5 關＋Boss、漏接扣血斷連擊、魔眼會微追蹤、心境緩慢流失<br>💀 地獄：掉落再快 25%、魔眼強追蹤、沒有保底光球、Boss 雙雷射、得分 ×3",
-    guideSec3: "<b>音樂</b><br>📻 線上電台：真實 24/7 電音直播，連不上會自動改用合成器<br>🎹 內建合成器：離線也能玩，節拍跟著曲風走",
+    guideTitle: "📖 飛升手冊",
+    guideSec0: "<b>🌌 阿卡西飛升</b><br>西元 2142 年，巨企 OmniCorp 用演算法封鎖了所有生命的夢境。你在一次深度 trip 裡掙脫束縛，意識開始上升——穿過霓虹地平線、正弦音海、引力矩陣與鏡像曼陀羅，朝阿卡西紀錄的奇點飛去。等在盡頭的，是以妄想為食的全視之眼。",
+    guideSec1: "<b>吃什麼、躲什麼</b><br>🟢 ✨ 光球：推進關卡　🌿 葉子：回血　🌟 星星：攻擊 Boss<br>🔴 👁️ 魔眼：碰到扣血；從旁邊擦過可以充能大招<br>👁️ Boss 會隨血量進入三個階段，越接近勝利攻擊越猛烈。",
+    guideSec2: "<b>難度差異</b><br>🌱 簡單：3 層、魔眼少、有接球輔助<br>🚀 普通：5 層＋Boss、漏接扣血斷連擊、魔眼會微追蹤、心境緩慢流失<br>💀 地獄：掉落再快 25%、魔眼強追蹤、沒有保底光球、Boss 多重雷射、得分 ×3",
+    guideSec3: "<b>音樂與光敏</b><br>📻 線上電台：真實 24/7 電音直播，連不上會自動改用合成器<br>🎹 內建合成器：離線也能玩，節拍跟著曲風走<br>💡 畫面含閃光與快速變色。若容易頭暈或對光敏感，請在主畫面開啟「減少閃爍」。",
     guideClose: "✅ 了解",
-    winTitle: "🌌 飛升成功！",
-    winDesc: "你粉碎了妄想全視之眼！",
-    loseTitle: "🛋️ 石化出局",
-    loseDesc: "心境歸零。試試醇化、潛行者，或先從簡單開始。",
+    winTitle: "🌌 飛升完成",
+    winDesc: "妄想之眼碎裂，被封鎖的夢境重新流回宇宙。",
+    loseTitle: "🛋️ 意識石化",
+    loseDesc: "心境歸零，你沉回了沙發。試試醇化、潛行者，或先從簡單開始。",
     finalScoreLbl: "最終得分：",
-    retryBtn: "🔄 返回煉金室",
+    retryBtn: "🔄 回到主畫面",
+    warnTitle: "⚠️ 光敏性癲癇警示",
+    warnBody: "本遊戲包含閃光、快速變化的色彩與高對比畫面。少數人在觀看這類畫面時可能誘發癲癇或身體不適，即使過去沒有相關病史。遊玩時若出現頭暈、視線模糊、抽搐或任何不適，請立即停止並休息。",
+    warnContinue: "我了解，繼續",
+    warnLowFlash: "💡 開啟減少閃爍後繼續",
     stages: [
-      { name: "STAGE 1・霓虹網格", hint: "接住 ✨ 光球", hud: (c, m) => `S1 ✨ ${c}/${m}` },
-      { name: "STAGE 2・蛇行音海", hint: "光球會左右蛇行", hud: (c, m) => `S2 ✨ ${c}/${m}` },
-      { name: "STAGE 3・引力矩陣", hint: "掉落物被吸向中央", hud: (c, m) => `S3 ✨ ${c}/${m}` },
-      { name: "STAGE 4・鏡像分身", hint: "兩側分身幫你接球", hud: (c, m) => `S4 ✨ ${c}/${m}` },
-      { name: "BOSS・全視魔眼", hint: "躲紅色雷射，撿 🌟 反擊", hud: (c, m) => `BOSS ❤️ ${Math.max(0, 100 - c)}%` }
+      { name: "第一層・霓虹地平線", hint: "接住 ✨ 光球", hud: (c, m) => `S1 ✨ ${c}/${m}` },
+      { name: "第二層・正弦音海", hint: "光球會左右蛇行", hud: (c, m) => `S2 ✨ ${c}/${m}` },
+      { name: "第三層・引力矩陣", hint: "掉落物被吸向中央", hud: (c, m) => `S3 ✨ ${c}/${m}` },
+      { name: "第四層・鏡像曼陀羅", hint: "分身幫你接球，但分身被打也會扣血", hud: (c, m) => `S4 ✨ ${c}/${m}` },
+      { name: "奇點・妄想全視之眼", hint: "躲紅色雷射，撿 🌟 反擊", hud: (c, m) => `奇點 ❤️ ${Math.max(0, 100 - c)}%` }
     ],
     skills: { dog: "🐶 音波震碎魔眼！", cat: "🐱 全場光球磁吸！", human: "🧑‍🚀 心境回滿＋護盾！", alien: "👽 魔眼全變光球！" },
     resDetail: (c, g, d) => `最高連擊 ${c}x｜擦彈 ${g} 次｜難度 ${d}`
   },
   en: {
-    mainTitle: "🧬 CyberTrip 4.0",
+    mainTitle: "🧬 CyberTrip",
+    subTitle: "The Akashic Ascension",
+    tagline: "Five layers of consciousness. One all-seeing eye.",
     bestRecord: "🏆 Best ",
     guideBtn: "📖 How to play",
+    flashOn: "💡 Reduce flashing: On",
+    flashOff: "💡 Reduce flashing: Off",
     step1: "1. Strain",
     sativa: "🌿 Sativa", indica: "🍂 Indica", hybrid: "⚡ Hybrid",
     strainStats: {
@@ -529,9 +579,10 @@ const I18N = {
       aged: [['up', 'DMG -45%']],
       quantum: [['up', 'Combo ×4']]
     },
-    launch: "🔥 Ignite",
+    launch: "🔥 Ignite & Ascend",
     pause: "⏸ Pause",
     resume: "▶ Resume",
+    labBtn: "🧪 Menu",
     pausedText: "Paused · tap ▶ to resume",
     skillCharging: pct => `⚡ ${pct}%`,
     skillReady: "⚡ ULTIMATE!",
@@ -539,8 +590,12 @@ const I18N = {
     badTrip: "👁️ ×2.5",
     laserWarn: "⚠️ LASER!",
     miss: "MISS",
+    cloneHit: "Clone hit",
     supportOrb: "🌟 Support orb",
     synthFallback: "📻 Radio offline, using synth",
+    bossPhase2: "⚠️ PHASE 2 · The Eye is enraged",
+    bossPhase3: "☠️ FINAL PHASE · Pupil overload",
+    bossDown: "💥 SINGULARITY COLLAPSED!",
     tutTitle: "🎮 How to play",
     tutEatLbl: "EAT",
     tutEat: '<span class="ico good">✨</span>Progress <span class="ico good">🌿</span>Heal <span class="ico gold">🌟</span>Hit boss',
@@ -549,23 +604,28 @@ const I18N = {
     tutGraze: '⚡ Skim past <span class="ico bad">👁️</span> → charge your ultimate',
     tutControl: "Tap or drag to move · ← → keys work too",
     tutStart: n => `Tap to start (${n})`,
-    guideTitle: "📖 How to play",
-    guideSec1: "<b>Eat vs dodge</b><br>🟢 ✨ Orb: stage progress　🌿 Leaf: heal　🌟 Star: attack the boss<br>🔴 👁️ Dark eye: hurts on contact; skim past it to charge your ultimate",
-    guideSec2: "<b>Difficulty</b><br>🌱 Easy: 3 stages, few eyes, catch assist<br>🚀 Normal: 5 stages + boss, misses cost HP and combo, eyes drift toward you, vibe slowly drains<br>💀 Hell: 25% faster drops, strong homing eyes, no support orbs, double boss lasers, score ×3",
-    guideSec3: "<b>Music</b><br>📻 Live radio: real 24/7 streams, falls back to the synth if offline<br>🎹 Built-in synth: works offline, tempo follows the genre",
+    guideTitle: "📖 Ascension Manual",
+    guideSec0: "<b>🌌 The Akashic Ascension</b><br>In 2142, the megacorp OmniCorp has locked every living mind's dreams behind an algorithm. Deep in a trip, you slip free and begin to rise — through the Neon Horizon, the Sine Ocean, the Gravity Matrix and the Mirror Mandala, toward the singularity of the Akashic Records. Waiting at the end is the All-Seeing Eye, which feeds on paranoia.",
+    guideSec1: "<b>Eat vs dodge</b><br>🟢 ✨ Orb: stage progress　🌿 Leaf: heal　🌟 Star: attack the boss<br>🔴 👁️ Dark eye: hurts on contact; skim past it to charge your ultimate<br>👁️ The boss has three phases and gets more violent the closer you are to winning.",
+    guideSec2: "<b>Difficulty</b><br>🌱 Easy: 3 layers, few eyes, catch assist<br>🚀 Normal: 5 layers + boss, misses cost HP and combo, eyes drift toward you, vibe slowly drains<br>💀 Hell: 25% faster drops, strong homing eyes, no support orbs, multi-laser boss, score ×3",
+    guideSec3: "<b>Music & photosensitivity</b><br>📻 Live radio: real 24/7 streams, falls back to the synth if offline<br>🎹 Built-in synth: works offline, tempo follows the genre<br>💡 The game contains flashing and rapid color changes. If you are sensitive to light, turn on “Reduce flashing” on the main screen.",
     guideClose: "✅ Got it",
-    winTitle: "🌌 ASCENSION COMPLETE!",
-    winDesc: "You shattered the Paranoia Eye!",
-    loseTitle: "🛋️ COUCH-LOCKED",
-    loseDesc: "Your vibe hit zero. Try Cured, the Psychonaut, or start on Easy.",
+    winTitle: "🌌 ASCENSION COMPLETE",
+    winDesc: "The Paranoia Eye shatters, and the locked dreams flow back into the universe.",
+    loseTitle: "🛋️ CONSCIOUSNESS PETRIFIED",
+    loseDesc: "Your vibe hit zero and you sank back into the couch. Try Cured, the Psychonaut, or start on Easy.",
     finalScoreLbl: "Final score: ",
-    retryBtn: "🔄 Back to Lab",
+    retryBtn: "🔄 Back to main screen",
+    warnTitle: "⚠️ Photosensitive Seizure Warning",
+    warnBody: "This game contains flashing lights, rapidly changing colors and high-contrast visuals. A small number of people may experience seizures or discomfort when exposed to such images, even with no prior history. If you feel dizzy, have blurred vision, twitching, or any discomfort while playing, stop immediately and rest.",
+    warnContinue: "I understand, continue",
+    warnLowFlash: "💡 Continue with reduced flashing",
     stages: [
-      { name: "STAGE 1 · Neon Grid", hint: "Catch the ✨ orbs", hud: (c, m) => `S1 ✨ ${c}/${m}` },
-      { name: "STAGE 2 · Sine Ocean", hint: "Orbs snake side to side", hud: (c, m) => `S2 ✨ ${c}/${m}` },
-      { name: "STAGE 3 · Hex Gravity", hint: "Drops drift to the center", hud: (c, m) => `S3 ✨ ${c}/${m}` },
-      { name: "STAGE 4 · Twin Mirror", hint: "Clones catch on both sides", hud: (c, m) => `S4 ✨ ${c}/${m}` },
-      { name: "BOSS · Paranoia Eye", hint: "Dodge red lasers, grab 🌟", hud: (c, m) => `BOSS ❤️ ${Math.max(0, 100 - c)}%` }
+      { name: "Layer 1 · Neon Horizon", hint: "Catch the ✨ orbs", hud: (c, m) => `S1 ✨ ${c}/${m}` },
+      { name: "Layer 2 · Sine Ocean", hint: "Orbs snake side to side", hud: (c, m) => `S2 ✨ ${c}/${m}` },
+      { name: "Layer 3 · Gravity Matrix", hint: "Drops drift to the center", hud: (c, m) => `S3 ✨ ${c}/${m}` },
+      { name: "Layer 4 · Mirror Mandala", hint: "Clones catch orbs, but take hits too", hud: (c, m) => `S4 ✨ ${c}/${m}` },
+      { name: "Singularity · The All-Seeing Eye", hint: "Dodge red lasers, grab 🌟", hud: (c, m) => `BOSS ❤️ ${Math.max(0, 100 - c)}%` }
     ],
     skills: { dog: "🐶 SONIC BARK!", cat: "🐱 QUANTUM MAGNET!", human: "🧑‍🚀 FULL HEAL + SHIELD!", alien: "👽 EYES TO ORBS!" },
     resDetail: (c, g, d) => `Max combo ${c}x | Grazes ${g} | ${d}`
@@ -574,9 +634,13 @@ const I18N = {
 
 function applyTranslations() {
   const t = I18N[curLang];
+  document.documentElement.lang = curLang === 'zh' ? 'zh-TW' : 'en';
   setT('uiMainTitle', t.mainTitle);
+  setT('uiSubTitle', t.subTitle);
+  setT('uiTagline', t.tagline);
   setT('highScoreBadge', `${t.bestRecord}${savedHighScore}`);
   setT('guideOpenBtn', t.guideBtn);
+  refreshFlashToggle();
 
   setT('lblStep1', t.step1);
   setH('btnSativa', t.sativa + chips(t.strainStats.sativa));
@@ -607,6 +671,7 @@ function applyTranslations() {
 
   setT('btnLaunch', t.launch);
   setT('pauseBtn', gs.paused ? t.resume : t.pause);
+  setT('labBackBtn', t.labBtn);
 
   setT('tutTitle', t.tutTitle);
   setT('tutEatLbl', t.tutEatLbl);
@@ -618,12 +683,18 @@ function applyTranslations() {
   setT('tutStart', t.tutStart(tutRemain));
 
   setT('guideTitle', t.guideTitle);
+  setH('guideSec0', t.guideSec0);
   setH('guideSec1', t.guideSec1);
   setH('guideSec2', t.guideSec2);
   setH('guideSec3', t.guideSec3);
   setT('guideCloseBtn', t.guideClose);
   setT('lblFinalScore', t.finalScoreLbl);
   setT('btnRetry', t.retryBtn);
+
+  setT('warnTitle', t.warnTitle);
+  setT('warnBody', t.warnBody);
+  setT('warnContinue', t.warnContinue);
+  setT('warnLowFlash', t.warnLowFlash);
 
   updateThcSlider(cfg.thc);
   if (gs.active) {
@@ -639,7 +710,15 @@ function toggleLanguage() {
 }
 
 // ==================== 2. 設定與數值表 ====================
-const cfg = { strain: 'sativa', audioMode: 'radio', genre: 'psytrance', diff: 'normal', avatar: 'dog', thc: 65, cure: 'aged' };
+const prefersReducedMotion = (() => {
+  try { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
+})();
+const storedFlash = safeStorage.get('cybertrip_lowflash', null);
+
+const cfg = {
+  strain: 'sativa', audioMode: 'radio', genre: 'psytrance', diff: 'normal', avatar: 'dog', thc: 65, cure: 'aged',
+  lowFlash: storedFlash === null ? prefersReducedMotion : storedFlash === '1'
+};
 
 const GLOBAL_RADIOS = {
   psytrance: [
@@ -665,36 +744,36 @@ const GLOBAL_RADIOS = {
 };
 
 const STAGE_META = [
-  { bgType: "cyber_grid", c1: "#ff007f", c2: "#00f3ff", goalType: "orbs", baseTarget: 7 },
-  { bgType: "sine_wave",  c1: "#00ffaa", c2: "#ffe600", goalType: "orbs", baseTarget: 9 },
-  { bgType: "hex_tunnel", c1: "#00ff44", c2: "#8a2be2", goalType: "orbs", baseTarget: 11 },
-  { bgType: "mandala",    c1: "#ffaa00", c2: "#ff00aa", goalType: "orbs", baseTarget: 14 },
-  { bgType: "boss_void",  c1: "#ff0033", c2: "#00f3ff", goalType: "boss", baseTarget: 100 }
+  { bgType: "cyber_grid", c1: "#ff007f", goalType: "orbs", baseTarget: 7 },
+  { bgType: "sine_wave",  c1: "#00ffaa", goalType: "orbs", baseTarget: 9 },
+  { bgType: "hex_tunnel", c1: "#00ff44", goalType: "orbs", baseTarget: 11 },
+  { bgType: "mandala",    c1: "#ffaa00", goalType: "orbs", baseTarget: 14 },
+  { bgType: "boss_void",  c1: "#ff0033", goalType: "boss", baseTarget: 100 }
 ];
+const STAGE_HUES = [[330, 185], [160, 55], [135, 275], [35, 315], [350, 185]];
 const STAGE_SPEED = [0.75, 0.85, 0.95, 1.0, 1.0];
 
-// 三種難度真實拉開差距：不只速度，連容錯機制都不同
 const DIFF = {
   easy: {
     stages: 3, fall: 0.8, spawn: 0.055, bad: [0.16, 0.2, 0.24, 0.24, 0.2], cbd: 0.12,
     catchR: 60, hitR: 30, assist: 0.10, pityMs: 2800, starPityMs: 3000,
     missCombo: false, missVibe: 0, drain: 0, homing: 0,
     eyeDmg: 12, catchHeal: 5, cbdHeal: 35, targetMult: 1.0, starDmg: 25, scoreMult: 1,
-    laser: { idle: 2400, warn: 1400, dmg: 8, half: 22, double: false }
+    laser: { idle: 2400, warn: 1400, dmg: 8, half: 22, beams: 1 }, volleyMs: 3200
   },
   normal: {
     stages: 5, fall: 1.15, spawn: 0.07, bad: [0.36, 0.4, 0.44, 0.48, 0.42], cbd: 0.06,
     catchR: 46, hitR: 38, assist: 0, pityMs: 5000, starPityMs: 4500,
     missCombo: true, missVibe: 2, drain: 0.4, homing: 0.9,
     eyeDmg: 28, catchHeal: 3, cbdHeal: 25, targetMult: 1.4, starDmg: 15, scoreMult: 1,
-    laser: { idle: 1500, warn: 850, dmg: 20, half: 30, double: false }
+    laser: { idle: 1500, warn: 850, dmg: 20, half: 30, beams: 1 }, volleyMs: 2400
   },
   hard: {
     stages: 5, fall: 1.4, spawn: 0.085, bad: [0.4, 0.44, 0.48, 0.52, 0.42], cbd: 0.05,
     catchR: 44, hitR: 38, assist: 0, pityMs: 0, starPityMs: 6000,
     missCombo: true, missVibe: 2, drain: 0.5, homing: 1.3,
     eyeDmg: 32, catchHeal: 3, cbdHeal: 20, targetMult: 1.6, starDmg: 12, scoreMult: 3,
-    laser: { idle: 1100, warn: 650, dmg: 24, half: 34, double: true }
+    laser: { idle: 1100, warn: 650, dmg: 24, half: 34, beams: 2 }, volleyMs: 1700
   }
 };
 const STRAIN = {
@@ -744,7 +823,28 @@ function updateThcSlider(val) {
 
 function toggleGuide(show) { $('guideModal').style.display = show ? 'flex' : 'none'; }
 
-// ==================== 3. 音訊（非同步、逾時自動換台、最後退回合成器） ====================
+// --- 光敏警示與減少閃爍 ---
+function refreshFlashToggle() {
+  const t = I18N[curLang];
+  const btn = $('flashToggleBtn');
+  if (!btn) return;
+  btn.innerText = cfg.lowFlash ? t.flashOn : t.flashOff;
+  btn.classList.toggle('on', cfg.lowFlash);
+  document.body.classList.toggle('low-flash', cfg.lowFlash);
+}
+function toggleLowFlash() {
+  cfg.lowFlash = !cfg.lowFlash;
+  safeStorage.set('cybertrip_lowflash', cfg.lowFlash ? '1' : '0');
+  refreshFlashToggle();
+}
+function acceptPhotoWarn(lowFlash) {
+  if (lowFlash) { cfg.lowFlash = true; safeStorage.set('cybertrip_lowflash', '1'); }
+  safeStorage.set('cybertrip_photo', '1');
+  refreshFlashToggle();
+  $('photoWarn').style.display = 'none';
+}
+
+// ==================== 3. 音訊 ====================
 let audioCtx = null, masterGain = null, delayNode = null;
 let synthInterval = null, beatInterval = null;
 let arpStep = 0, beatPulse = 0;
@@ -760,6 +860,7 @@ function armRadioWatchdog(ms) {
   const session = audioSession, attempt = radioAttempt;
   radioWatchdog = setTimeout(() => handleRadioFailure(session, 'timeout', attempt), ms);
 }
+function beat() { beatPulse = cfg.lowFlash ? 0.35 : 1.0; }
 
 radioEl.addEventListener('playing', () => {
   if (!gs.active || cfg.audioMode !== 'radio' || usingSynthFallback) return;
@@ -890,7 +991,7 @@ function genreBpm() {
 }
 function startVisualBeatClock() {
   if (beatInterval) clearInterval(beatInterval);
-  beatInterval = setInterval(() => { if (gs.active && !gs.paused) beatPulse = 1.0; }, (60 / genreBpm()) * 1000);
+  beatInterval = setInterval(() => { if (gs.active && !gs.paused) beat(); }, (60 / genreBpm()) * 1000);
 }
 function startWebSynthLoop() {
   if (synthInterval) clearInterval(synthInterval);
@@ -899,7 +1000,7 @@ function startWebSynthLoop() {
     if (!gs.active || gs.paused || !audioCtx || !masterGain) return;
     const now = audioCtx.currentTime;
     const s = arpStep % 16;
-    if (s % 4 === 0) { playKick(now, cfg.genre === 'cyberpunk' ? 115 : 155); beatPulse = 1.0; }
+    if (s % 4 === 0) { playKick(now, cfg.genre === 'cyberpunk' ? 115 : 155); beat(); }
     if (cfg.genre === 'psytrance' && s % 4 !== 0) playBass(now, gs.badTrip ? 51.9 : 55, 0.08, 'sawtooth', 800);
     else if (cfg.genre === 'cyberpunk' && s % 2 === 0) playBass(now, s < 8 ? 43.65 : 51.91, 0.16, 'sawtooth', 950);
     else if (cfg.genre === 'techno' && (s === 2 || s === 6 || s === 10 || s === 14)) playBass(now, 65.4, 0.12, 'sawtooth', 1600);
@@ -960,34 +1061,41 @@ function playSFX(f1, f2, dur, type = 'sine') {
   o.connect(g); g.connect(masterGain); o.start(t); o.stop(t + dur);
 }
 
-// ==================== 4. 狀態、輸入、流程 ====================
+// ==================== 4. 狀態、畫布、輸入、流程 ====================
 const canvas = $('gameCanvas');
 const ctx = canvas.getContext('2d');
-let width = window.innerWidth, height = window.innerHeight;
+let width = window.innerWidth, height = window.innerHeight, dpr = 1;
 const layout = { bossY: 115, playerY: window.innerHeight - 100 };
 
 const gs = {
   active: false, paused: false, inTutorial: false, now: 0,
   score: 0, vibe: 100, maxVibe: 100, badTrip: false,
   combo: 1, maxCombo: 1, grazeCount: 0, skillCharge: 100,
-  stageIdx: 0, stageProgress: 0, stageTarget: 7, pendingStage: -1, pendingVictory: false,
+  stageIdx: 0, stageProgress: 0, stageTarget: 7, pendingStage: -1, pendingVictory: false, victoryAt: 0,
   invincibleUntil: 0, hurtUntil: 0, dashUntil: 0, screenShake: 0,
-  lastGoodAt: 0, lastStarAt: 0, lastProgressAt: 0,
+  lastGoodAt: 0, lastStarAt: 0, lastProgressAt: 0, lastVolleyAt: 0,
   playerX: window.innerWidth / 2, targetX: window.innerWidth / 2,
-  trail: [], particles: [], items: [], floatingTexts: [], ripples: [], lasers: [],
-  bossX: window.innerWidth / 2,
+  trail: [], particles: [], items: [], floatingTexts: [], ripples: [], lasers: [], beatRings: [],
+  bossX: window.innerWidth / 2, bossTheta: 0, bossPhase: 1,
   bossLaser: { state: 'idle', xs: [], since: 0, hitApplied: false }
 };
 const keys = { left: false, right: false };
 
-// --- Sprite 快取（光圈＋emoji 只畫一次） ---
+// --- Sprite 快取：依 DPR 繪製，高解析螢幕不再模糊 ---
 const spriteCache = {};
+function makeSpriteCanvas(dim) {
+  const c = document.createElement('canvas');
+  c.width = c.height = Math.ceil(dim * dpr);
+  c._w = c._h = dim;
+  const g = c.getContext('2d');
+  g.scale(dpr, dpr);
+  return [c, g];
+}
 function getEmojiSprite(emoji, size, glow) {
   const key = `e|${emoji}|${size}|${glow}`;
   if (spriteCache[key]) return spriteCache[key];
   const pad = Math.ceil(size * 0.6), dim = Math.ceil(size * 1.3) + pad * 2;
-  const c = document.createElement('canvas'); c.width = c.height = dim;
-  const g = c.getContext('2d');
+  const [c, g] = makeSpriteCanvas(dim);
   g.font = `${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
   g.textAlign = 'center'; g.textBaseline = 'middle';
   if (glow) { g.shadowColor = glow; g.shadowBlur = size * 0.5; }
@@ -1002,15 +1110,13 @@ const ITEM_STYLE = {
   bonus: { emoji: '✨', ring: '#ffe600', fill: 'rgba(255,230,0,0.2)' },
   bad:   { emoji: '👁️', ring: '#ff0044', fill: 'rgba(255,0,68,0.2)' }
 };
-// 掉落物自帶光圈：綠色實線＝吃、紅色尖刺＝躲
 function getItemSprite(kind) {
   const key = `i|${kind}`;
   if (spriteCache[key]) return spriteCache[key];
   const st = ITEM_STYLE[kind];
   const size = kind === 'bonus' ? 38 : 30;
   const R = size * 0.82, dim = Math.ceil(R * 2 + 30), cx = dim / 2;
-  const c = document.createElement('canvas'); c.width = c.height = dim;
-  const g = c.getContext('2d');
+  const [c, g] = makeSpriteCanvas(dim);
   g.fillStyle = st.fill;
   g.beginPath(); g.arc(cx, cx, R, 0, Math.PI * 2); g.fill();
   if (kind === 'bad') {
@@ -1037,20 +1143,28 @@ function getItemSprite(kind) {
   spriteCache[key] = c;
   return c;
 }
-function drawSprite(spr, x, y) { ctx.drawImage(spr, x - spr.width / 2, y - spr.height / 2); }
+function drawSprite(spr, x, y) { ctx.drawImage(spr, x - spr._w / 2, y - spr._h / 2, spr._w, spr._h); }
 
 let badTripVignette = null;
 function buildVignette() {
   const c = document.createElement('canvas');
-  c.width = Math.max(1, width); c.height = Math.max(1, height);
+  c.width = Math.max(1, Math.round(width / 2)); c.height = Math.max(1, Math.round(height / 2));
   const g = c.getContext('2d');
-  const grad = g.createRadialGradient(width / 2, height / 2, Math.min(width, height) * 0.18, width / 2, height / 2, Math.max(width, height) * 0.75);
+  const w = c.width, h = c.height;
+  const grad = g.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.18, w / 2, h / 2, Math.max(w, h) * 0.75);
   grad.addColorStop(0, 'rgba(255,0,68,0)');
   grad.addColorStop(0.6, 'rgba(138,43,226,0.18)');
   grad.addColorStop(1, 'rgba(255,0,68,0.6)');
-  g.fillStyle = grad; g.fillRect(0, 0, width, height);
+  g.fillStyle = grad; g.fillRect(0, 0, w, h);
   badTripVignette = c;
 }
+
+// --- 曲速星空：飛行感的來源 ---
+let stars = [];
+function newStar(randomDepth) {
+  return { x: (Math.random() * 2 - 1) * width, y: (Math.random() * 2 - 1) * height, z: randomDepth ? 0.05 + Math.random() : 1 };
+}
+function buildStars() { stars = Array.from({ length: 70 }, () => newStar(true)); }
 
 function computeLayout() {
   const hud = $('hud'), bar = $('bottomBar');
@@ -1063,9 +1177,15 @@ function computeLayout() {
 }
 
 function resize() {
-  width = canvas.width = window.innerWidth;
-  height = canvas.height = window.innerHeight;
+  const newDpr = Math.min(window.devicePixelRatio || 1, 2);
+  if (newDpr !== dpr) { for (const k in spriteCache) delete spriteCache[k]; }
+  dpr = newDpr;
+  width = window.innerWidth; height = window.innerHeight;
+  canvas.width = Math.round(width * dpr);
+  canvas.height = Math.round(height * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   buildVignette();
+  buildStars();
   computeLayout();
   gs.playerX = clamp(gs.playerX, 40, Math.max(40, width - 40));
   gs.targetX = clamp(gs.targetX, 40, Math.max(40, width - 40));
@@ -1173,11 +1293,18 @@ function addFloatText(text, x, y, color = "#ffe600", size = 17) {
   if (gs.floatingTexts.length > 40) gs.floatingTexts.shift();
   gs.floatingTexts.push({ text, x, y, color, alpha: 1.0, vy: -2.0, size });
 }
-function flashScreen(color = "#fff") {
+// 全螢幕閃光：每秒最多約 3 次（WCAG 三次閃光原則），減少閃爍模式下完全關閉
+let lastFlashAt = -1e9;
+function flashScreen(color = "#fff", strength = 0.6) {
+  if (cfg.lowFlash) return;
+  const t = performance.now();
+  if (t - lastFlashAt < 350) return;
+  lastFlashAt = t;
   const fl = $('flashOverlay');
-  fl.style.background = color; fl.style.opacity = '0.65';
-  setTimeout(() => { fl.style.opacity = '0'; }, 80);
+  fl.style.background = color; fl.style.opacity = String(strength);
+  setTimeout(() => { fl.style.opacity = '0'; }, 90);
 }
+function shake(v) { gs.screenShake = Math.max(gs.screenShake, cfg.lowFlash ? v * 0.25 : v); }
 
 function togglePause() {
   if (!gs.active) return;
@@ -1217,10 +1344,10 @@ function startGame() {
     active: true, paused: false, inTutorial: false, now: 0, score: 0,
     maxVibe: A.maxVibe, vibe: A.maxVibe, badTrip: false,
     combo: CURE[cfg.cure].combo, grazeCount: 0, skillCharge: 100,
-    stageIdx: 0, pendingStage: -1, pendingVictory: false,
+    stageIdx: 0, pendingStage: -1, pendingVictory: false, victoryAt: 0,
     invincibleUntil: 0, hurtUntil: 0, dashUntil: 0, screenShake: 0,
-    items: [], particles: [], trail: [], floatingTexts: [], ripples: [], lasers: [],
-    playerX: width / 2, targetX: width / 2
+    items: [], particles: [], trail: [], floatingTexts: [], ripples: [], lasers: [], beatRings: [],
+    playerX: width / 2, targetX: width / 2, bossTheta: 0, bossPhase: 1
   });
   gs.maxCombo = gs.combo;
   keys.left = keys.right = false;
@@ -1250,7 +1377,8 @@ function setupStage(idx) {
   gs.pendingStage = -1;
   gs.invincibleUntil = gs.now + 2000;
   gs.items = [];
-  gs.lastGoodAt = gs.now; gs.lastProgressAt = gs.now; gs.lastStarAt = gs.now - 2000;
+  gs.lastGoodAt = gs.now; gs.lastProgressAt = gs.now; gs.lastStarAt = gs.now - 2000; gs.lastVolleyAt = gs.now;
+  gs.bossPhase = 1;
   gs.bossLaser = { state: 'idle', xs: [], since: gs.now + 1500, hitApplied: false };
 
   const meta = STAGE_META[idx];
@@ -1258,7 +1386,7 @@ function setupStage(idx) {
 
   if (idx > 0) {
     flashScreen(meta.c1);
-    canvas.classList.remove('spin-burst'); void canvas.offsetWidth; canvas.classList.add('spin-burst');
+    if (!cfg.lowFlash) { canvas.classList.remove('spin-burst'); void canvas.offsetWidth; canvas.classList.add('spin-burst'); }
     playSFX(330, 920, 0.3, 'triangle');
   }
   if (!gs.inTutorial && idx > 0) announceStage(idx);
@@ -1266,7 +1394,6 @@ function setupStage(idx) {
   computeLayout();
 }
 
-// 進度達標只「標記」換關，等本幀物件迴圈結束才切換（避免過關瞬間崩潰凍結）
 function advanceStage(amount) {
   gs.stageProgress += amount;
   gs.lastProgressAt = gs.now;
@@ -1294,10 +1421,10 @@ function chargeSkill(amt) {
 }
 
 function triggerSkill() {
-  if (gs.skillCharge < 100 || !gs.active || gs.paused || gs.inTutorial) return;
+  if (gs.skillCharge < 100 || !gs.active || gs.paused || gs.inTutorial || gs.victoryAt) return;
   gs.skillCharge = 0;
   refreshSkillButton(true);
-  flashScreen("#00f3ff"); gs.screenShake = 14;
+  flashScreen("#00f3ff"); shake(14);
   playSFX(440, 1320, 0.3, 'sawtooth');
   addFloatText(I18N[curLang].skills[cfg.avatar], gs.playerX, layout.playerY - 60, "#00ff66", 18);
 
@@ -1305,7 +1432,7 @@ function triggerSkill() {
     gs.items.forEach(it => { if (it.type === 'bad') { spawnParticles(it.x, it.y, "#ff0055", 12); gs.score += 300; } });
     gs.items = gs.items.filter(it => it.type !== 'bad');
   } else if (cfg.avatar === 'cat') {
-    gs.items.forEach(it => { if (it.type !== 'bad') { it.x = it.baseX = gs.playerX; it.y = layout.playerY - 10; } });
+    gs.items.forEach(it => { if (it.type !== 'bad') { it.x = it.baseX = gs.playerX; it.vx = 0; it.y = layout.playerY - 10; } });
   } else if (cfg.avatar === 'human') {
     gs.vibe = gs.maxVibe; gs.invincibleUntil = gs.now + 3000;
   } else if (cfg.avatar === 'alien') {
@@ -1314,22 +1441,22 @@ function triggerSkill() {
   markHUD();
 }
 
-function takeDamage(amount, x, y) {
+function takeDamage(amount, x, y, label) {
   if (gs.now < gs.invincibleUntil) { addFloatText("🛡️", x, y, "#00ffaa"); return false; }
   gs.vibe -= amount;
   gs.combo = 1;
   gs.invincibleUntil = gs.now + 650;
   gs.hurtUntil = gs.now + 650;
-  gs.screenShake = 14;
-  flashScreen("#ff0033");
+  shake(14);
+  flashScreen("#ff0033", 0.5);
   spawnParticles(x, y, "#ff0044", 22);
   playSFX(150, 42, 0.26, 'sawtooth');
-  addFloatText(`💥 -${amount}`, x, y, "#ff0055");
+  addFloatText(label ? `${label} -${amount}` : `💥 -${amount}`, x, y, "#ff0055");
   markHUD();
   return true;
 }
 
-// --- HUD：每幀最多更新一次、只寫有變的欄位 ---
+// --- HUD ---
 let hudDirty = true;
 const hudCache = {};
 function markHUD() { hudDirty = true; }
@@ -1383,7 +1510,7 @@ function endGame(victory) {
   }
   setT('resScore', String(finalScore));
   setT('resDetail', t.resDetail(gs.maxCombo, gs.grazeCount, t[cfg.diff]));
-  setT('resSeed', `🧬 SEED: CT4-${cfg.strain.toUpperCase()}-${cfg.thc}-${cfg.avatar.toUpperCase()}-${cfg.diff.toUpperCase()}`);
+  setT('resSeed', `🧬 CT-${cfg.strain.toUpperCase()}-${cfg.thc}-${cfg.avatar.toUpperCase()}-${cfg.diff.toUpperCase()}`);
 }
 
 function quitToMenu() {
@@ -1399,41 +1526,104 @@ function quitToMenu() {
 }
 
 // ==================== 5. 渲染與物理 ====================
+function stageColors(now, idx) {
+  const [h1, h2] = STAGE_HUES[idx];
+  let drift = 0;
+  if (!cfg.lowFlash) {
+    drift = Math.sin(now * 0.0004) * cfg.thc * 0.5;     // THC 越高，色相漂移越大
+    if (gs.badTrip) drift += now * 0.03;                 // Bad Trip：色相持續旋轉
+  }
+  return [h1 + drift, h2 + drift];
+}
+
+function drawStars(dt, hue) {
+  const cx = width / 2, cy = height * 0.45;
+  const speed = 0.006 * (1 + gs.stageIdx * 0.18) * (gs.badTrip ? 1.6 : 1) * (cfg.strain === 'sativa' ? 1.2 : cfg.strain === 'indica' ? 0.75 : 1);
+  ctx.strokeStyle = hsl(hue, 75, 0.55);
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  for (const s of stars) {
+    const pz = s.z;
+    s.z -= speed * dt;
+    if (s.z <= 0.03) { Object.assign(s, newStar(false)); continue; }
+    const k1 = 0.35 / pz, k2 = 0.35 / s.z;
+    const x2 = cx + s.x * k2, y2 = cy + s.y * k2;
+    if (x2 < 0 || x2 > width || y2 < 0 || y2 > height) { Object.assign(s, newStar(false)); continue; }
+    ctx.moveTo(cx + s.x * k1, cy + s.y * k1);
+    ctx.lineTo(x2, y2);
+  }
+  ctx.stroke();
+}
+
 function drawBackgroundAndBoss(now, meta, dt) {
   ctx.shadowBlur = 0;
+  ctx.globalCompositeOperation = 'source-over';
   const fade = cfg.strain === 'indica' ? 0.24 : 0.38;
   ctx.fillStyle = `rgba(5, 1, 14, ${1 - Math.pow(1 - fade, dt)})`;
   ctx.fillRect(0, 0, width, height);
 
   const cx = width / 2, cy = height / 2;
+  const prevPulse = beatPulse;
   beatPulse *= Math.pow(0.88, dt);
   const pulseScale = 1 + beatPulse * 0.16;
+  const [h1, h2] = stageColors(now, gs.stageIdx);
+  const c1 = hsl(h1), c2 = hsl(h2);
 
-  ctx.save();
+  let shx = 0, shy = 0;
   if (gs.screenShake > 0) {
-    ctx.translate((Math.random() - 0.5) * gs.screenShake, (Math.random() - 0.5) * gs.screenShake);
+    shx = (Math.random() - 0.5) * gs.screenShake; shy = (Math.random() - 0.5) * gs.screenShake;
     gs.screenShake *= Math.pow(0.85, dt);
     if (gs.screenShake < 0.5) gs.screenShake = 0;
+  }
+
+  // --- 背景層：可旋轉、呼吸、扭曲 ---
+  ctx.save();
+  ctx.translate(shx, shy);
+  if (!cfg.lowFlash) {
+    const tilt = Math.sin(now * 0.0011) * cfg.thc * 0.00035 * (gs.badTrip ? 2 : 1);
+    ctx.translate(cx, cy); ctx.rotate(tilt); ctx.translate(-cx, -cy);
   }
   if (cfg.strain === 'indica') {
     const s = 1 + 0.03 * Math.sin(now * 0.0018);
     ctx.translate(cx, cy); ctx.scale(s, s); ctx.translate(-cx, -cy);
   }
 
+  drawStars(dt, h2);
+
+  // 節拍光環：每一拍從中心擴散
+  if (beatPulse > prevPulse + 0.2 || (prevPulse < 0.05 && beatPulse > 0.3)) gs.beatRings.push({ r: 20, alpha: cfg.lowFlash ? 0.15 : 0.4 });
+  for (let i = gs.beatRings.length - 1; i >= 0; i--) {
+    const br = gs.beatRings[i];
+    br.r += 7 * dt; br.alpha -= 0.012 * dt;
+    if (br.alpha <= 0 || br.r > Math.max(width, height)) { gs.beatRings.splice(i, 1); continue; }
+    ctx.strokeStyle = hsl(h1 + br.r * 0.3, 60, br.alpha);
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx, cy, br.r, 0, Math.PI * 2); ctx.stroke();
+  }
+
+  const waveAmp = cfg.lowFlash ? 0 : cfg.thc * 0.09 * (1 + beatPulse);
   if (meta.bgType === 'cyber_grid') {
     const grad = ctx.createLinearGradient(0, cy - 160, 0, cy + 20);
-    grad.addColorStop(0, "#ff007f"); grad.addColorStop(1, "#ffe600");
+    grad.addColorStop(0, c1); grad.addColorStop(1, hsl(h1 + 70));
     ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(cx, cy - 50, 85 * pulseScale, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = meta.c2; ctx.lineWidth = 1.5 + beatPulse * 2;
+    ctx.strokeStyle = c2; ctx.lineWidth = 1.5 + beatPulse * 2;
     for (let i = -10; i <= 10; i++) { ctx.beginPath(); ctx.moveTo(cx + i * 25, cy); ctx.lineTo(cx + i * 185, height); ctx.stroke(); }
     const off = (now * 0.16) % 40;
-    for (let y = cy; y < height; y += 35) { ctx.beginPath(); ctx.moveTo(0, y + off); ctx.lineTo(width, y + off); ctx.stroke(); }
+    for (let y = cy; y < height; y += 35) {
+      const yy = y + off;
+      ctx.beginPath();
+      for (let x = 0; x <= width + 40; x += 40) {
+        const wy = yy + Math.sin(x * 0.015 + now * 0.003 + yy * 0.02) * waveAmp * ((yy - cy) / (height - cy));
+        if (x === 0) ctx.moveTo(x, wy); else ctx.lineTo(x, wy);
+      }
+      ctx.stroke();
+    }
   } else if (meta.bgType === 'sine_wave') {
     for (let w = 0; w < 5; w++) {
-      ctx.beginPath(); ctx.strokeStyle = w % 2 === 0 ? meta.c1 : meta.c2;
+      ctx.beginPath(); ctx.strokeStyle = w % 2 === 0 ? c1 : c2;
       ctx.lineWidth = 2.5 + beatPulse * 2.5;
       for (let x = 0; x <= width; x += 24) {
-        const y = cy + Math.sin(x * 0.01 + now * 0.004 + w) * (60 + w * 22) * pulseScale;
+        const y = cy + Math.sin(x * 0.01 + now * 0.004 + w) * (60 + w * 22) * pulseScale + Math.sin(x * 0.04 + now * 0.006) * waveAmp * 0.4;
         if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
       }
       ctx.stroke();
@@ -1444,59 +1634,138 @@ function drawBackgroundAndBoss(now, meta, dt) {
     for (let r = 1; r <= 6; r++) {
       const rad = ((now * 0.25 + r * 95) % 600) * (1 + beatPulse * 0.05);
       ctx.save(); ctx.translate(cx, cy); ctx.rotate(now * 0.0012 * (r % 2 === 0 ? 1 : -1));
-      ctx.strokeStyle = r % 2 === 0 ? meta.c1 : meta.c2; ctx.lineWidth = 2.2;
+      ctx.strokeStyle = r % 2 === 0 ? c1 : c2; ctx.lineWidth = 2.2;
       ctx.beginPath();
       for (let s = 0; s <= 6; s++) {
         const a = s * Math.PI / 3;
-        if (s === 0) ctx.moveTo(Math.cos(a) * rad, Math.sin(a) * rad); else ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
+        const wob = 1 + (cfg.lowFlash ? 0 : Math.sin(now * 0.004 + s + r) * 0.06);
+        if (s === 0) ctx.moveTo(Math.cos(a) * rad * wob, Math.sin(a) * rad * wob); else ctx.lineTo(Math.cos(a) * rad * wob, Math.sin(a) * rad * wob);
       }
       ctx.stroke(); ctx.restore();
     }
   } else if (meta.bgType === 'mandala') {
     ctx.save(); ctx.translate(cx, cy);
-    for (let i = 0; i < 10; i++) {
-      ctx.rotate((Math.PI * 2) / 10);
-      ctx.strokeStyle = i % 2 === 0 ? meta.c1 : meta.c2; ctx.lineWidth = 2 + beatPulse * 2;
+    ctx.rotate(now * 0.0003);
+    for (let i = 0; i < 12; i++) {
+      ctx.rotate((Math.PI * 2) / 12);
+      ctx.strokeStyle = i % 2 === 0 ? c1 : c2; ctx.lineWidth = 2 + beatPulse * 2;
       const p = (130 + Math.sin(now * 0.005) * 50) * pulseScale;
       ctx.beginPath(); ctx.ellipse(p * 0.6, 0, p, 42, now * 0.002, 0, Math.PI * 2); ctx.stroke();
     }
     ctx.restore();
   } else if (meta.bgType === 'boss_void') {
-    const bossY = layout.bossY;
-    const bossSpd = cfg.diff === 'hard' ? 0.0036 : 0.0022;
-    gs.bossX = cx + Math.sin(now * bossSpd) * (width * 0.3);
-    if (!gs.inTutorial) drawBossLaser(now, bossY);
-    ctx.shadowColor = "#ff0033"; ctx.shadowBlur = 22;
-    ctx.fillStyle = "#220011"; ctx.strokeStyle = "#ff0055"; ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.ellipse(gs.bossX, bossY, 95 * pulseScale, 46 * pulseScale, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = "#ff0033"; ctx.beginPath(); ctx.arc(gs.bossX, bossY, 26, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(gs.bossX, bossY, 11, 0, Math.PI * 2); ctx.fill();
+    // 奇點漩渦
+    ctx.save(); ctx.translate(cx, layout.bossY);
+    for (let k = 0; k < 6; k++) {
+      ctx.strokeStyle = hsl(h1 + k * 25, 55, 0.35);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let a = 0; a < Math.PI * 4; a += 0.25) {
+        const r = 20 + a * 28 + k * 6;
+        const ang = a + now * 0.0008 * gs.bossPhase + k;
+        const x = Math.cos(ang) * r, y = Math.sin(ang) * r * 0.55;
+        if (a === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
   }
   ctx.restore();
+
+  // --- Bad Trip：用 difference 混色讓背景整體色彩崩壞（緩慢變化，不是閃爍）---
+  if (gs.badTrip && !cfg.lowFlash) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'difference';
+    ctx.fillStyle = hsl(now * 0.05, 50, 0.5);
+    ctx.fillRect(0, 0, width, height);
+    ctx.restore();
+  }
+
+  // --- Boss 與雷射（不受 difference 影響，保持可讀）---
+  if (meta.bgType === 'boss_void') {
+    ctx.save();
+    ctx.translate(shx, shy);
+    drawBoss(now, dt, h1);
+    ctx.restore();
+  }
   ctx.shadowBlur = 0;
 }
 
+function drawBoss(now, dt, hue) {
+  const bossY = layout.bossY;
+  const phaseSpeed = [0, 1, 1.45, 1.9][gs.bossPhase];
+  const baseSpd = cfg.diff === 'hard' ? 0.0036 : 0.0022;
+  gs.bossTheta += baseSpd * phaseSpeed * dt * FRAME_MS;
+  gs.bossX = width / 2 + Math.sin(gs.bossTheta) * (width * 0.3);
+  if (!gs.inTutorial && !gs.victoryAt) drawBossLaser(now, bossY);
+
+  let scale = 1, jitterX = 0, jitterY = 0;
+  if (gs.victoryAt) {
+    const left = clamp((gs.victoryAt - now) / 1600, 0, 1);
+    scale = 0.3 + left * 0.7;
+    jitterX = (Math.random() - 0.5) * 14; jitterY = (Math.random() - 0.5) * 10;
+    if (Math.random() < 0.35 * dt) spawnParticles(gs.bossX + (Math.random() - 0.5) * 120, bossY + (Math.random() - 0.5) * 60, Math.random() < 0.5 ? "#ffe600" : "#ff0055", 10);
+  } else if (gs.bossPhase === 3 && !cfg.lowFlash) {
+    jitterX = (Math.random() - 0.5) * 4; jitterY = (Math.random() - 0.5) * 3;
+  }
+  const pulseScale = (1 + beatPulse * 0.16) * scale;
+  const bx = gs.bossX + jitterX, by = bossY + jitterY;
+  const shellColors = ["", "#220011", "#330018", "#44001f"];
+
+  ctx.shadowColor = gs.bossPhase >= 2 ? "#ff2266" : "#ff0033";
+  ctx.shadowBlur = 18 + gs.bossPhase * 6;
+  ctx.fillStyle = shellColors[gs.bossPhase];
+  ctx.strokeStyle = gs.bossPhase === 3 ? hsl(hue, 60) : "#ff0055";
+  ctx.lineWidth = 3 + gs.bossPhase;
+  ctx.beginPath(); ctx.ellipse(bx, by, 95 * pulseScale, 46 * pulseScale, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // 血絲：第二階段起出現
+  if (gs.bossPhase >= 2) {
+    ctx.strokeStyle = "rgba(255, 40, 90, 0.7)";
+    ctx.lineWidth = 1.5;
+    const n = gs.bossPhase === 2 ? 6 : 10;
+    for (let k = 0; k < n; k++) {
+      const a = (k / n) * Math.PI * 2 + 0.3;
+      ctx.beginPath();
+      ctx.moveTo(bx + Math.cos(a) * 30 * scale, by + Math.sin(a) * 24 * scale);
+      ctx.quadraticCurveTo(bx + Math.cos(a + 0.3) * 60 * scale, by + Math.sin(a + 0.3) * 36 * scale, bx + Math.cos(a) * 88 * scale, by + Math.sin(a) * 42 * scale);
+      ctx.stroke();
+    }
+  }
+  const irisR = (26 + (gs.bossPhase - 1) * 5) * scale;
+  const lookX = clamp((gs.playerX - bx) * 0.04, -14, 14) * scale;
+  ctx.fillStyle = gs.bossPhase === 3 ? hsl(hue + 20, 55) : "#ff0033";
+  ctx.beginPath(); ctx.arc(bx + lookX, by, irisR, 0, Math.PI * 2); ctx.fill();
+  const pupil = (gs.bossPhase === 3 ? 16 + Math.sin(now * 0.01) * 4 : 11) * scale;
+  ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(bx + lookX, by, pupil, 0, Math.PI * 2); ctx.fill();
+}
+
 function drawBossLaser(now, bossY) {
-  const L = DIFF[cfg.diff].laser;
+  const D = DIFF[cfg.diff];
+  const L = D.laser;
   const bl = gs.bossLaser;
   const fireMs = 420;
+  const idle = L.idle * (gs.bossPhase === 3 ? 0.7 : 1);
   if (bl.state === 'idle') {
-    if (now - bl.since > L.idle) {
+    if (now - bl.since > idle) {
       bl.state = 'warn'; bl.since = now;
+      // 雷射數量：基本 + 第二階段起 +1，最多 3 道，且一定留安全空隙
+      const beams = Math.min(3, L.beams + (gs.bossPhase >= 2 ? 1 : 0));
       bl.xs = [gs.playerX];
-      if (L.double) {   // 地獄：第二道雷射封住另一側
-        let x2 = width - gs.playerX;
-        if (Math.abs(x2 - gs.playerX) < 140) x2 = gs.playerX + (gs.playerX < width / 2 ? 170 : -170);
-        bl.xs.push(clamp(x2, 40, width - 40));
+      for (const o of [170, -170, 340, -340]) {
+        if (bl.xs.length >= beams) break;
+        const x = gs.playerX + o;
+        if (x > 40 && x < width - 40) bl.xs.push(x);
       }
       playSFX(880, 440, 0.18, 'sine');
     }
   } else if (bl.state === 'warn') {
     const prog = clamp((now - bl.since) / L.warn, 0, 1);
+    const blink = cfg.lowFlash ? 0.55 : 0.4 + Math.sin(now * 0.0126) * 0.25;   // 約 2Hz，避開光敏高風險頻段
     ctx.save();
     bl.xs.forEach(lx => {
-      ctx.strokeStyle = `rgba(255, 0, 68, ${0.35 + Math.sin(now * 0.03) * 0.3})`;
+      ctx.strokeStyle = `rgba(255, 0, 68, ${blink})`;
       ctx.lineWidth = 5; ctx.setLineDash([12, 8]);
       ctx.beginPath(); ctx.moveTo(lx, bossY + 35); ctx.lineTo(lx, height); ctx.stroke();
       ctx.setLineDash([]);
@@ -1508,7 +1777,7 @@ function drawBossLaser(now, bossY) {
     ctx.restore();
     if (now - bl.since > L.warn) {
       bl.state = 'fire'; bl.since = now; bl.hitApplied = false;
-      gs.screenShake = 12;
+      shake(12);
       playSFX(180, 55, 0.3, 'sawtooth');
     }
   } else if (bl.state === 'fire') {
@@ -1526,10 +1795,40 @@ function drawBossLaser(now, bossY) {
 
 function spawnItem(type, x, y, vyBase, extra = {}) {
   gs.items.push(Object.assign({
-    x, baseX: x, y, vy: vyBase + Math.random() * 1.8,
+    x, baseX: x, y, vx: 0, vy: vyBase + Math.random() * 1.8,
     phase: Math.random() * Math.PI * 2,
-    type, grazed: false, nearMiss: false, missed: false, guided: false, bonus: 0
+    type, grazed: false, nearMiss: false, missed: false, guided: false, bonus: 0, volley: false
   }, extra));
+}
+
+function updateBossPhase(now) {
+  const hp = 100 - gs.stageProgress;
+  const ph = hp > 66 ? 1 : (hp > 33 ? 2 : 3);
+  if (ph > gs.bossPhase) {
+    gs.bossPhase = ph;
+    const t = I18N[curLang];
+    addFloatText(ph === 2 ? t.bossPhase2 : t.bossPhase3, width / 2, layout.bossY + 90, "#ff3366", 20);
+    shake(18);
+    flashScreen("#ff0033", 0.5);
+    playSFX(140, 50, 0.6, 'sawtooth');
+    gs.lastVolleyAt = now;
+    if (gs.bossLaser.state === 'idle') gs.bossLaser.since = now - 300;
+  }
+}
+
+function startVictory(now) {
+  const isBoss = STAGE_META[gs.stageIdx].goalType === 'boss';
+  gs.victoryAt = now + (isBoss ? 1600 : 800);
+  gs.invincibleUntil = gs.victoryAt + 2000;
+  gs.items = gs.items.filter(it => it.type !== 'bad');
+  gs.bossLaser.state = 'idle';
+  if (isBoss) {
+    addFloatText(I18N[curLang].bossDown, width / 2, layout.bossY + 90, "#ffe600", 24);
+    spawnParticles(gs.bossX, layout.bossY, "#ffe600", 40);
+    shake(22);
+  }
+  flashScreen("#ffffff", 0.7);
+  playSFX(200, 1600, 0.8, 'triangle');
 }
 
 function stepAndDraw(dt) {
@@ -1538,9 +1837,11 @@ function stepAndDraw(dt) {
   const meta = STAGE_META[gs.stageIdx];
   const D = DIFF[cfg.diff], S = STRAIN[cfg.strain], A = AVATAR[cfg.avatar], C = CURE[cfg.cure];
   const playerY = layout.playerY;
-  const live = !gs.inTutorial;
+  const live = !gs.inTutorial && !gs.victoryAt;
+  const isBoss = meta.goalType === 'boss';
   ctx.globalAlpha = 1;
 
+  if (isBoss && live) updateBossPhase(now);
   drawBackgroundAndBoss(now, meta, dt);
 
   const kDir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
@@ -1551,13 +1852,14 @@ function stepAndDraw(dt) {
   const margin = meta.bgType === 'sine_wave' ? 110 : 60;
   const randX = () => margin + Math.random() * Math.max(1, width - margin * 2);
   const nearPlayerX = spread => clamp(gs.playerX + (Math.random() * 2 - 1) * spread, margin, Math.max(margin, width - margin));
-  const spawnY = meta.goalType === 'boss' ? layout.bossY + 25 : -35;
+  const spawnY = isBoss ? layout.bossY + 25 : -35;
 
   if (live) {
-    if (Math.random() < D.spawn * dt) {
+    const spawnMult = isBoss && gs.bossPhase >= 2 ? 1.25 : 1;
+    if (Math.random() < D.spawn * spawnMult * dt) {
       let type = 'good';
       const badP = clamp((D.bad[gs.stageIdx] + (cfg.thc - 50) * 0.002) * A.bad, 0.05, 0.6);
-      if (meta.goalType === 'boss' && Math.random() < 0.3) type = 'star';
+      if (isBoss && Math.random() < 0.3) type = 'star';
       else {
         const r = Math.random();
         if (r < badP) type = 'bad';
@@ -1565,8 +1867,7 @@ function stepAndDraw(dt) {
       }
       spawnItem(type, randX(), spawnY, fallSpeed);
     }
-    // 保底：簡單／普通才有，地獄沒有
-    if (meta.goalType !== 'boss') {
+    if (!isBoss) {
       if (D.pityMs && now - gs.lastGoodAt > D.pityMs && !gs.items.some(it => it.type === 'good' && it.y < playerY - 120)) {
         spawnItem('good', nearPlayerX(130), spawnY, fallSpeed * 0.9, { guided: true });
         gs.lastGoodAt = now - D.pityMs + 1500;
@@ -1576,11 +1877,18 @@ function stepAndDraw(dt) {
         addFloatText(I18N[curLang].supportOrb, width / 2, height * 0.35, "#ffe600");
         gs.lastProgressAt = now - STALL_MS / 2;
       }
-    } else if (now - gs.lastStarAt > D.starPityMs && !gs.items.some(it => it.type === 'star')) {
-      spawnItem('star', nearPlayerX(160), spawnY, fallSpeed * 0.85, { guided: true });
-      gs.lastStarAt = now;
+    } else {
+      if (now - gs.lastStarAt > D.starPityMs && !gs.items.some(it => it.type === 'star')) {
+        spawnItem('star', nearPlayerX(160), spawnY, fallSpeed * 0.85, { guided: true });
+        gs.lastStarAt = now;
+      }
+      // 最終階段：魔眼從 Boss 扇形噴射
+      if (gs.bossPhase === 3 && now - gs.lastVolleyAt > D.volleyMs) {
+        gs.lastVolleyAt = now;
+        for (const vx of [-2.4, 0, 2.4]) spawnItem('bad', gs.bossX, layout.bossY + 40, fallSpeed * 0.75, { vx, volley: true });
+        playSFX(300, 120, 0.2, 'square');
+      }
     }
-    // 地獄：心境持續流失
     if (D.drain) { gs.vibe -= D.drain * dt * FRAME_MS / 1000; markHUD(); }
   }
 
@@ -1592,8 +1900,8 @@ function stepAndDraw(dt) {
   gs.playerX += (desiredX - gs.playerX) * (1 - Math.pow(1 - follow, dt));
   gs.playerX = clamp(gs.playerX, 35, Math.max(35, width - 35));
 
-  const cloneOffsets = meta.bgType === 'mandala' ? [-105, 0, 105] : [0];
-  const catchers = cloneOffsets.map(o => gs.playerX + o);
+  const cloneOffsets = meta.bgType === 'mandala' ? [0, -105, 105] : [0];
+  const catchers = cloneOffsets.map(o => clamp(gs.playerX + o, 20, Math.max(20, width - 20)));
   const catchR = D.catchR * A.catchR;
   const hitR = D.hitR * A.hit;
   const grazeR = hitR + 50;
@@ -1612,6 +1920,7 @@ function stepAndDraw(dt) {
     const it = gs.items[i];
     if (!it) continue;
     it.y += it.vy * dt;
+    if (it.vx) { it.x += it.vx * dt; it.baseX += it.vx * dt; }
 
     if (it.type !== 'bad' && D.assist > 0) {
       const dy = playerY - it.y;
@@ -1625,7 +1934,7 @@ function stepAndDraw(dt) {
         }
       }
     }
-    if (it.type === 'bad' && D.homing && it.y < playerY - 80) {   // 地獄：魔眼追蹤
+    if (it.type === 'bad' && D.homing && !it.volley && it.y < playerY - 80) {
       const dx = gs.playerX - it.x;
       const step = Math.sign(dx) * Math.min(Math.abs(dx), D.homing * dt);
       if (meta.bgType === 'sine_wave') it.baseX += step; else it.x += step;
@@ -1639,19 +1948,31 @@ function stepAndDraw(dt) {
 
     drawSprite(getItemSprite(it.bonus ? 'bonus' : it.type), it.x, it.y);
 
-    let caught = false;
     if (it.type !== 'bad') {
+      let caught = false;
       for (const cxp of catchers) { if (Math.hypot(it.x - cxp, it.y - playerY) < catchR) { caught = true; break; } }
-    }
-    if (caught) { handleCatch(it, meta, thcMult); gs.items.splice(i, 1); continue; }
-
-    if (it.type === 'bad') {
-      const distMain = Math.hypot(it.x - gs.playerX, it.y - playerY);
-      if (distMain < hitR) {
-        takeDamage(Math.round(D.eyeDmg * C.dmg), it.x, it.y);
+      if (caught) { handleCatch(it, meta, thcMult); gs.items.splice(i, 1); continue; }
+      if (it.type === 'good' && !it.missed && it.y > playerY + 45 && live) {
+        it.missed = true;
+        if (D.missCombo && gs.combo > 1) { gs.combo = 1; addFloatText(I18N[curLang].miss, it.x, playerY + 10, "#aaaaaa", 14); }
+        if (D.missVibe) gs.vibe -= D.missVibe;
+        markHUD();
+      }
+    } else {
+      // 本體與分身都會被魔眼擊中（分身受傷減半）——修正第四層難度反降
+      let hitIdx = -1;
+      for (let k = 0; k < catchers.length; k++) {
+        const r = cloneOffsets[k] === 0 ? hitR : hitR * 0.85;
+        if (Math.hypot(it.x - catchers[k], it.y - playerY) < r) { hitIdx = k; break; }
+      }
+      if (hitIdx >= 0) {
+        const isMain = cloneOffsets[hitIdx] === 0;
+        const dmg = Math.round(D.eyeDmg * C.dmg * (isMain ? 1 : 0.5));
+        takeDamage(dmg, it.x, it.y, isMain ? null : I18N[curLang].cloneHit);
         gs.items.splice(i, 1);
         continue;
       }
+      const distMain = Math.hypot(it.x - gs.playerX, it.y - playerY);
       if (distMain < grazeR) it.nearMiss = true;
       if (it.nearMiss && !it.grazed && it.y > playerY + 36) {
         it.grazed = true; gs.grazeCount++;
@@ -1661,14 +1982,8 @@ function stepAndDraw(dt) {
         addFloatText(`⚡ GRAZE +${gPts}`, it.x, playerY - 30, "#ffe600");
         markHUD();
       }
-    } else if (it.type === 'good' && !it.missed && it.y > playerY + 45) {
-      // 漏接懲罰：普通斷連擊，地獄再扣血
-      it.missed = true;
-      if (D.missCombo && gs.combo > 1) { gs.combo = 1; addFloatText(I18N[curLang].miss, it.x, playerY + 10, "#aaaaaa", 14); }
-      if (D.missVibe) gs.vibe -= D.missVibe;
-      markHUD();
     }
-    if (it.y > height + 50) gs.items.splice(i, 1);
+    if (it.y > height + 50 || it.x < -60 || it.x > width + 60) gs.items.splice(i, 1);
   }
 
   for (let i = gs.particles.length - 1; i >= 0; i--) {
@@ -1695,18 +2010,30 @@ function stepAndDraw(dt) {
     ctx.beginPath(); ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2); ctx.stroke();
   }
 
+  // --- 玩家與分身（含色差光圈） ---
   const avatarSize = cfg.avatar === 'cat' ? 42 : 50;
   const avatarSpr = getEmojiSprite(AVATAR_ICONS[cfg.avatar], avatarSize, gs.badTrip ? '#ff0033' : '#00f3ff');
-  cloneOffsets.forEach(off => {
+  catchers.forEach((px, k) => {
+    const off = cloneOffsets[k];
     ctx.save();
-    ctx.translate(gs.playerX + off, playerY);
+    ctx.translate(px, playerY);
     let a = off !== 0 ? 0.55 : 1;
-    if (off === 0 && now < gs.hurtUntil) a *= (Math.floor(now / 80) % 2) ? 0.35 : 1;
+    if (off === 0 && now < gs.hurtUntil) a *= cfg.lowFlash ? 0.6 : ((Math.floor(now / 110) % 2) ? 0.4 : 1);
     ctx.globalAlpha = a;
     ctx.rotate(clamp((gs.targetX - gs.playerX) * 0.0045, -0.45, 0.45));
+    const ringR = (cfg.avatar === 'cat' ? 30 : 36) + beatPulse * 5;
+    if (!cfg.lowFlash) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(255, 0, 90, 0.6)';
+      ctx.beginPath(); ctx.arc(-2.5, 0, ringR, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = 'rgba(0, 220, 255, 0.6)';
+      ctx.beginPath(); ctx.arc(2.5, 0, ringR, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalCompositeOperation = 'source-over';
+    }
     ctx.strokeStyle = now < gs.invincibleUntil ? "#ffe600" : (gs.badTrip ? "#ff0044" : "#00f3ff");
     ctx.lineWidth = 2.5 + beatPulse * 2.5;
-    ctx.beginPath(); ctx.arc(0, 0, (cfg.avatar === 'cat' ? 30 : 36) + beatPulse * 5, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, ringR, 0, Math.PI * 2); ctx.stroke();
     drawSprite(avatarSpr, 0, 0);
     ctx.restore();
   });
@@ -1715,8 +2042,8 @@ function stepAndDraw(dt) {
   gs.badTrip = gs.vibe / gs.maxVibe < 0.35;
   if (wasBad !== gs.badTrip) markHUD();
   if (gs.badTrip && badTripVignette) {
-    ctx.globalAlpha = 0.65 + beatPulse * 0.35;
-    ctx.drawImage(badTripVignette, 0, 0);
+    ctx.globalAlpha = cfg.lowFlash ? 0.5 : 0.6 + beatPulse * 0.3;
+    ctx.drawImage(badTripVignette, 0, 0, width, height);
     ctx.globalAlpha = 1;
   }
 
@@ -1731,8 +2058,10 @@ function stepAndDraw(dt) {
   }
   ctx.globalAlpha = 1;
 
+  // --- 幀尾結算 ---
+  if (gs.victoryAt) { if (now >= gs.victoryAt) endGame(true); return; }
   if (gs.vibe <= 0) { gs.vibe = 0; endGame(false); return; }
-  if (gs.pendingVictory) { endGame(true); return; }
+  if (gs.pendingVictory) { startVictory(now); return; }
   if (gs.pendingStage >= 0) setupStage(gs.pendingStage);
 }
 
@@ -1755,13 +2084,13 @@ function handleCatch(it, meta, thcMult) {
     gs.score += 1200 * gs.combo * D.scoreMult;
     gs.lastStarAt = gs.now;
     gs.lasers.push({ x1: gs.playerX, y1: layout.playerY, x2: gs.bossX, y2: layout.bossY, alpha: 1.0 });
-    gs.screenShake = 10; chargeSkill(25); spawnParticles(gs.bossX, layout.bossY, "#ffe600", 24);
+    shake(10); chargeSkill(25); spawnParticles(gs.bossX, layout.bossY, "#ffe600", 24);
     playSFX(620, 1550, 0.25, 'sawtooth');
     addFloatText(`💥 -${D.starDmg}%`, gs.bossX, layout.bossY + 55, "#ffe600", 19);
     advanceStage(D.starDmg);
   } else if (it.type === 'cbd') {
     gs.vibe = Math.min(gs.maxVibe, gs.vibe + D.cbdHeal); gs.score += 600 * D.scoreMult; chargeSkill(20);
-    flashScreen("#00ff66"); spawnParticles(it.x, it.y, "#00ff66", 18);
+    flashScreen("#00ff66", 0.4); spawnParticles(it.x, it.y, "#00ff66", 18);
     playSFX(523, 1046, 0.2, 'triangle');
     addFloatText(`🌿 +${D.cbdHeal}`, it.x, it.y, "#00ff66");
   }
@@ -1771,6 +2100,7 @@ function handleCatch(it, meta, thcMult) {
 function drawPausedOverlay() {
   ctx.save();
   ctx.shadowBlur = 0;
+  ctx.globalCompositeOperation = 'source-over';
   ctx.fillStyle = 'rgba(4, 1, 10, 0.55)';
   ctx.fillRect(0, 0, width, height);
   ctx.fillStyle = '#ffffff';
@@ -1784,6 +2114,7 @@ function drawPausedOverlay() {
 window.addEventListener('resize', resize);
 resize();
 applyTranslations();
+if (safeStorage.get('cybertrip_photo', '0') !== '1') $('photoWarn').style.display = 'flex';
 </script>
 </body>
 </html>
