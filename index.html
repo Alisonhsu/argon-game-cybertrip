@@ -110,6 +110,7 @@
     border: 2px solid var(--green); color: #fff;
     box-shadow: 0 0 10px rgba(0, 255, 102, 0.35);
   }
+  .opt-desc { font-size: 0.75rem; color: #d4c6f0; margin-top: 7px; min-height: 1.3em; line-height: 1.45; }
   .chips { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; margin-top: 5px; }
   .chip { font-size: 0.66rem; padding: 1px 5px; border-radius: 6px; font-weight: bold; white-space: nowrap; }
   .chip.up { color: #00ff66; background: rgba(0, 255, 102, 0.12); }
@@ -162,12 +163,14 @@
     display: flex; flex-direction: column; justify-content: center; gap: 3px; min-width: 0;
   }
   .hud-left { flex: 0 1 150px; }
-  .hud-center { flex: 1 1 auto; max-width: 280px; border-color: rgba(255, 230, 0, 0.6); text-align: center; }
+  .hud-center { flex: 1 1 auto; max-width: 320px; border-color: rgba(255, 230, 0, 0.6); text-align: center; }
   .hud-right { flex: 0 0 auto; align-items: flex-end; pointer-events: auto; }
   #tripStatus { font-size: 0.74rem; font-weight: bold; white-space: nowrap; color: var(--green); }
   .vibe-bar-bg { width: 100%; height: 7px; background: #1a1a2e; border-radius: 6px; overflow: hidden; border: 1px solid #444; }
   .vibe-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, var(--pink), var(--cyan), var(--green)); transition: width 0.15s; }
-  #stageTitle { font-size: 0.74rem; font-weight: bold; color: var(--yellow); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #stageTitle { font-size: 0.78rem; font-weight: bold; color: var(--yellow); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #stageShort { display: none; }
+  #stageProgBar.boss { background: linear-gradient(90deg, #ff0044, #ff7ac0); }
   .prog-bar-bg { width: 100%; height: 6px; background: #221538; border-radius: 4px; overflow: hidden; }
   #stageProgBar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--cyan), var(--yellow)); transition: width 0.2s; }
   .score-row { display: flex; align-items: baseline; gap: 6px; line-height: 1; }
@@ -208,6 +211,8 @@
     #scoreVal { font-size: 0.85rem; }
     .mini-ctrl-btn { padding: 2px 5px; font-size: 0.66rem; }
     #radioStationLabel { max-width: 92px; }
+    #stageFull { display: none; }
+    #stageShort { display: inline; }
     .main-title { font-size: 1.4rem; }
   }
 
@@ -257,6 +262,22 @@
     margin-bottom: 10px; border-left: 4px solid var(--pink); font-size: 0.88rem;
   }
   .warn-box { border-color: var(--yellow); max-width: 460px; }
+  /* 開場背景提要 */
+  .intro-box { max-width: 440px; text-align: center; }
+  .intro-kicker { font-size: 0.78rem; letter-spacing: 0.25em; color: #ff7ac0; font-weight: bold; margin-bottom: 4px; }
+  .intro-title {
+    font-size: 1.5rem; font-weight: bold; margin: 0 0 14px;
+    background: linear-gradient(90deg, var(--green), var(--cyan), var(--pink));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .intro-step {
+    display: flex; align-items: center; gap: 12px; text-align: left;
+    background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(0, 243, 255, 0.25);
+    border-radius: 12px; padding: 10px 12px; margin-bottom: 8px;
+  }
+  .intro-emoji { font-size: 1.8rem; flex: 0 0 auto; }
+  .intro-step b { display: block; font-size: 0.95rem; color: #fff; }
+  .intro-step span { font-size: 0.82rem; color: #c9bde3; }
   .warn-title { color: var(--yellow); margin: 0 0 10px; font-size: 1.2rem; }
   .warn-body { font-size: 0.9rem; color: #ddd; margin: 0 0 14px; }
 </style>
@@ -274,7 +295,7 @@
       <div class="vibe-bar-bg"><div class="vibe-bar-fill" id="vibeBar"></div></div>
     </div>
     <div class="hud-pill hud-center">
-      <div id="stageTitle">S1</div>
+      <div id="stageTitle"><span id="stageFull"></span><span id="stageShort"></span></div>
       <div class="prog-bar-bg"><div id="stageProgBar"></div></div>
     </div>
     <div class="hud-pill hud-right">
@@ -319,6 +340,7 @@
         <div class="top-btn-group">
           <span class="high-score-tag" id="highScoreBadge">🏆 0</span>
           <button class="btn-top btn-lang" onclick="toggleLanguage()" id="langSwitchBtn">🌐 EN / 繁中</button>
+          <button class="btn-top" onclick="toggleMuteAudio()" id="menuMuteBtn">🔊</button>
           <button class="btn-top btn-flash" onclick="toggleLowFlash()" id="flashToggleBtn">💡</button>
           <button class="btn-top" onclick="toggleGuide(true)" id="guideOpenBtn">📖</button>
         </div>
@@ -329,48 +351,53 @@
           <div class="step-box">
             <span class="step-title" id="lblStep1"></span>
             <div class="btn-row">
-              <div class="opt-btn active" onclick="setCfg('strain','sativa',this)" id="btnSativa"></div>
-              <div class="opt-btn" onclick="setCfg('strain','indica',this)" id="btnIndica"></div>
-              <div class="opt-btn" onclick="setCfg('strain','hybrid',this)" id="btnHybrid"></div>
+              <div class="opt-btn active" data-grp="strain" data-key="sativa" onclick="setCfg('strain','sativa',this)" id="btnSativa"></div>
+              <div class="opt-btn" data-grp="strain" data-key="indica" onclick="setCfg('strain','indica',this)" id="btnIndica"></div>
+              <div class="opt-btn" data-grp="strain" data-key="hybrid" onclick="setCfg('strain','hybrid',this)" id="btnHybrid"></div>
             </div>
+            <div class="opt-desc" id="desc_strain"></div>
           </div>
 
           <div class="step-box">
             <span class="step-title" id="lblStep2"></span>
             <div class="seg">
-              <button class="seg-btn active" onclick="setAudioMode('radio',this)" id="btnModeRadio"></button>
-              <button class="seg-btn" onclick="setAudioMode('synth',this)" id="btnModeSynth"></button>
+              <button class="seg-btn active" data-grp="audioMode" data-key="radio" onclick="setAudioMode('radio',this)" id="btnModeRadio"></button>
+              <button class="seg-btn" data-grp="audioMode" data-key="synth" onclick="setAudioMode('synth',this)" id="btnModeSynth"></button>
             </div>
+            <div class="opt-desc" id="desc_audioMode"></div>
             <div class="sub-genre-panel">
               <span class="sub-genre-label" id="lblSubGenre"></span>
               <div class="btn-row two">
-                <div class="opt-btn active" onclick="setGenre('psytrance',this)">🛸 Psytrance</div>
-                <div class="opt-btn" onclick="setGenre('cyberpunk',this)">🦾 Cyberpunk</div>
-                <div class="opt-btn" onclick="setGenre('indie',this)">🌸 Psych Indie</div>
-                <div class="opt-btn" onclick="setGenre('techno',this)">⚙️ Techno</div>
+                <div class="opt-btn active" data-grp="genre" data-key="psytrance" onclick="setGenre('psytrance',this)">🛸 Psytrance</div>
+                <div class="opt-btn" data-grp="genre" data-key="cyberpunk" onclick="setGenre('cyberpunk',this)">🦾 Cyberpunk</div>
+                <div class="opt-btn" data-grp="genre" data-key="indie" onclick="setGenre('indie',this)">🌸 Psych Indie</div>
+                <div class="opt-btn" data-grp="genre" data-key="techno" onclick="setGenre('techno',this)">⚙️ Techno</div>
               </div>
+              <div class="opt-desc" id="desc_genre"></div>
             </div>
           </div>
 
           <div class="step-box">
             <span class="step-title" id="lblStep3"></span>
             <div class="btn-row">
-              <div class="opt-btn" onclick="setCfg('diff','easy',this)" id="btnEasy"></div>
-              <div class="opt-btn active" onclick="setCfg('diff','normal',this)" id="btnNormal"></div>
-              <div class="opt-btn" onclick="setCfg('diff','hard',this)" id="btnHard"></div>
+              <div class="opt-btn" data-grp="diff" data-key="easy" onclick="setCfg('diff','easy',this)" id="btnEasy"></div>
+              <div class="opt-btn active" data-grp="diff" data-key="normal" onclick="setCfg('diff','normal',this)" id="btnNormal"></div>
+              <div class="opt-btn" data-grp="diff" data-key="hard" onclick="setCfg('diff','hard',this)" id="btnHard"></div>
             </div>
+            <div class="opt-desc" id="desc_diff"></div>
           </div>
         </div>
 
         <div>
           <div class="step-box">
             <span class="step-title" id="lblStep4"></span>
-            <div class="btn-row">
-              <div class="opt-btn active" onclick="setCfg('avatar','dog',this)" id="btnDog"></div>
-              <div class="opt-btn" onclick="setCfg('avatar','cat',this)" id="btnCat"></div>
-              <div class="opt-btn" onclick="setCfg('avatar','human',this)" id="btnHuman"></div>
-              <div class="opt-btn" onclick="setCfg('avatar','alien',this)" id="btnAlien"></div>
+            <div class="btn-row two">
+              <div class="opt-btn active" data-grp="avatar" data-key="dog" onclick="setCfg('avatar','dog',this)" id="btnDog"></div>
+              <div class="opt-btn" data-grp="avatar" data-key="cat" onclick="setCfg('avatar','cat',this)" id="btnCat"></div>
+              <div class="opt-btn" data-grp="avatar" data-key="human" onclick="setCfg('avatar','human',this)" id="btnHuman"></div>
+              <div class="opt-btn" data-grp="avatar" data-key="alien" onclick="setCfg('avatar','alien',this)" id="btnAlien"></div>
             </div>
+            <div class="opt-desc" id="desc_avatar"></div>
           </div>
 
           <div class="step-box">
@@ -382,10 +409,11 @@
           <div class="step-box">
             <span class="step-title" id="lblStep6"></span>
             <div class="btn-row">
-              <div class="opt-btn" onclick="setCfg('cure','fresh',this)" id="btnFresh"></div>
-              <div class="opt-btn active" onclick="setCfg('cure','aged',this)" id="btnAged"></div>
-              <div class="opt-btn" onclick="setCfg('cure','quantum',this)" id="btnQuantum"></div>
+              <div class="opt-btn" data-grp="cure" data-key="fresh" onclick="setCfg('cure','fresh',this)" id="btnFresh"></div>
+              <div class="opt-btn active" data-grp="cure" data-key="aged" onclick="setCfg('cure','aged',this)" id="btnAged"></div>
+              <div class="opt-btn" data-grp="cure" data-key="quantum" onclick="setCfg('cure','quantum',this)" id="btnQuantum"></div>
             </div>
+            <div class="opt-desc" id="desc_cure"></div>
           </div>
         </div>
       </div>
@@ -418,6 +446,18 @@
         <div style="margin-top:8px; padding:6px; background:#0d061a; border-radius:8px; font-family:monospace; color:var(--green); font-size:0.8rem;" id="resSeed"></div>
       </div>
       <button class="launch-btn" onclick="quitToMenu()" id="btnRetry"></button>
+    </div>
+  </div>
+
+  <!-- 開場背景提要（首次進入顯示） -->
+  <div class="overlay-screen" id="introScreen" style="display:none; z-index:55;">
+    <div class="modal-box intro-box">
+      <div class="intro-kicker">CYBERTRIP</div>
+      <div class="intro-title" id="introTitle"></div>
+      <div class="intro-step"><div class="intro-emoji">🌀</div><div><b id="introT1"></b><span id="introD1"></span></div></div>
+      <div class="intro-step"><div class="intro-emoji">🛸</div><div><b id="introT2"></b><span id="introD2"></span></div></div>
+      <div class="intro-step"><div class="intro-emoji">👁️</div><div><b id="introT3"></b><span id="introD3"></span></div></div>
+      <button class="launch-btn" onclick="closeIntro()" id="introGo"></button>
     </div>
   </div>
 
@@ -458,8 +498,8 @@ const I18N = {
     guideBtn: "📖 玩法",
     flashOn: "💡 減少閃爍：開",
     flashOff: "💡 減少閃爍：關",
-    step1: "1. 品種",
-    sativa: "🌿 Sativa", indica: "🍂 Indica", hybrid: "⚡ Hybrid",
+    step1: "1. 旅程風格",
+    sativa: "☀️ 亢奮嗨翻", indica: "🌙 放鬆想睡", hybrid: "🌗 剛剛好",
     strainStats: {
       sativa: [['up', '反應+15%'], ['down', '落速+20%']],
       indica: [['up', '落速-20%'], ['down', '反應-35%']],
@@ -468,25 +508,60 @@ const I18N = {
     step2: "2. 音樂",
     modeRadio: "📻 線上電台",
     modeSynth: "🎹 內建合成器",
-    subGenreRadio: "↳ 電台曲風",
-    subGenreSynth: "↳ 合成器曲風",
+    subGenreRadio: "↳ 電台曲風・點選可試聽",
+    subGenreSynth: "↳ 合成器曲風・點選可試聽",
+    musicOn: "🔊 音樂", musicOff: "🔇 音樂",
+    desc: {
+      strain: {
+        sativa: "嗨到停不下來：角色反應快，但東西也掉得快。",
+        indica: "整個人陷進沙發：東西掉得慢，但角色反應也慢半拍。",
+        hybrid: "不快不慢，第一次玩選這個最穩。"
+      },
+      audioMode: {
+        radio: "連線播放真實的 24/7 電音直播電台，需要網路。",
+        synth: "遊戲內建、即時生成的電子音樂，離線也能玩，節奏會跟著戰況變化。"
+      },
+      genre: {
+        psytrance: "高速迷幻電子，像在隧道裡全速衝刺。",
+        cyberpunk: "暗黑合成器，霓虹雨夜的城市飆車感。",
+        indie: "夢幻、輕飄飄的迷幻獨立音樂，適合放鬆。",
+        techno: "重拍不斷重複、讓人恍神的地下派對節奏。"
+      },
+      diff: {
+        easy: "3 層、魔眼少、有接球輔助，適合第一次玩。",
+        normal: "完整 5 層＋Boss，漏接會扣血、斷連擊。",
+        hard: "掉得更快、魔眼會追著你、心境持續流失，得分 ×3。"
+      },
+      avatar: {
+        dog: "移動最靈活，但大招充得比較慢。大招：震碎全場魔眼。",
+        cat: "體型小、比較難被打中，但接球範圍也小。大招：全場光球吸過來。",
+        human: "血量比較多，但移動慢一點。大招：2 秒護盾＋回一點心境。",
+        alien: "魔眼出現得比較少，但大招充得慢。大招：全場魔眼變成光球。"
+      },
+      cure: {
+        fresh: "勁道直接：大招充能 +50%。",
+        aged: "後勁溫和：被打的傷害減少 30%。",
+        quantum: "一開場就上頭：連擊從 ×4 起跳。"
+      }
+    },
     step3: "3. 難度",
     easy: "🌱 簡單", normal: "🚀 普通", hard: "💀 地獄",
     step4: "4. 角色",
     dog: "🐶 邊牧", cat: "🐱 折耳貓", human: "🧑‍🚀 潛行者", alien: "👽 外星人",
     avatarStats: {
-      dog:   [['up', '敏捷+30%'], ['down', '血量-10%']],
+      dog:   [['up', '敏捷+30%'], ['down', '充能-15%']],
       cat:   [['up', '體型-25%'], ['down', '接球-15%']],
-      human: [['up', '血量+30%'], ['down', '敏捷-15%']],
+      human: [['up', '血量+10%'], ['down', '敏捷-15%']],
       alien: [['up', '魔眼-25%'], ['down', '充能-20%']]
     },
-    step5: "5. THC 濃度：",
-    thcHint: (m, high) => `得分 ×${m}${high ? '｜⚠️ 視野晃動、魔眼變多' : ''}`,
-    step6: "6. 熟成",
+    step5: "5. 茫度：",
+    highStates: ["😌 微醺", "😵‍💫 有點茫", "🌀 很茫", "🛸 茫到升天"],
+    thcHint: (m, high) => `得分 ×${m}${high ? '｜⚠️ 畫面晃動、魔眼變多' : ''}`,
+    step6: "6. 後勁",
     fresh: "🌱 新鮮", aged: "🏺 醇化", quantum: "🌌 量子",
     cureStats: {
       fresh: [['up', '充能+50%']],
-      aged: [['up', '減傷45%']],
+      aged: [['up', '減傷30%']],
       quantum: [['up', '開局連擊×4']]
     },
     launch: "🔥 點火・開始飛升",
@@ -496,6 +571,7 @@ const I18N = {
     pausedText: "已暫停・點 ▶ 繼續",
     skillCharging: pct => `⚡ ${pct}%`,
     skillReady: "⚡ 放大招！",
+    skillCooldown: s => `⚡ 冷卻 ${s}s`,
     happyTrip: "🌈 HAPPY",
     badTrip: "👁️ ×2.5",
     laserWarn: "⚠️ 雷射！",
@@ -531,13 +607,21 @@ const I18N = {
     warnContinue: "我了解，繼續",
     warnLowFlash: "💡 開啟減少閃爍後繼續",
     stages: [
-      { name: "第一層・霓虹地平線", hint: "接住 ✨ 光球", hud: (c, m) => `S1 ✨ ${c}/${m}` },
-      { name: "第二層・正弦音海", hint: "光球會左右蛇行", hud: (c, m) => `S2 ✨ ${c}/${m}` },
-      { name: "第三層・引力矩陣", hint: "掉落物被吸向中央", hud: (c, m) => `S3 ✨ ${c}/${m}` },
-      { name: "第四層・鏡像曼陀羅", hint: "分身幫你接球，但分身被打也會扣血", hud: (c, m) => `S4 ✨ ${c}/${m}` },
-      { name: "奇點・妄想全視之眼", hint: "躲紅色雷射，撿 🌟 反擊", hud: (c, m) => `奇點 ❤️ ${Math.max(0, 100 - c)}%` }
+      { name: "起飛・霓虹地平線", short: "起飛", hint: "接住 ✨ 光球" },
+      { name: "漂流・正弦音海", short: "漂流", hint: "光球會左右蛇行" },
+      { name: "下墜・引力矩陣", short: "下墜", hint: "掉落物被吸向中央" },
+      { name: "解離・鏡像曼陀羅", short: "解離", hint: "分身幫你接球，但分身被打也會扣血" },
+      { name: "覺醒・全視之眼", short: "覺醒", hint: "躲紅色雷射，撿 🌟 反擊" }
     ],
-    skills: { dog: "🐶 音波震碎魔眼！", cat: "🐱 全場光球磁吸！", human: "🧑‍🚀 心境回滿＋護盾！", alien: "👽 魔眼全變光球！" },
+    skills: { dog: "🐶 音波震碎魔眼！", cat: "🐱 全場光球磁吸！", human: "🧑‍🚀 護盾 2 秒＋心境 +12%！", alien: "👽 魔眼全變光球！" },
+    introTitle: "阿卡西飛升",
+    introT1: "你的夢被鎖住了",
+    introD1: "巨企 OmniCorp 用演算法封住了所有人的夢境。",
+    introT2: "茫起來，往上飛",
+    introD2: "接住 ✨ 光、躲開 👁️ 魔眼，一層一層往上穿越。",
+    introT3: "擊碎全視之眼",
+    introD3: "最上層，有個一直盯著你的東西。",
+    introGo: "我準備好了 →",
     resDetail: (c, g, d) => `最高連擊 ${c}x｜擦彈 ${g} 次｜難度 ${d}`
   },
   en: {
@@ -548,8 +632,8 @@ const I18N = {
     guideBtn: "📖 How to play",
     flashOn: "💡 Reduce flashing: On",
     flashOff: "💡 Reduce flashing: Off",
-    step1: "1. Strain",
-    sativa: "🌿 Sativa", indica: "🍂 Indica", hybrid: "⚡ Hybrid",
+    step1: "1. Trip vibe",
+    sativa: "☀️ Hyped Up", indica: "🌙 Couch Chill", hybrid: "🌗 Just Right",
     strainStats: {
       sativa: [['up', 'React +15%'], ['down', 'Drop spd +20%']],
       indica: [['up', 'Drop spd -20%'], ['down', 'React -35%']],
@@ -558,25 +642,60 @@ const I18N = {
     step2: "2. Music",
     modeRadio: "📻 Live radio",
     modeSynth: "🎹 Built-in synth",
-    subGenreRadio: "↳ Radio genre",
-    subGenreSynth: "↳ Synth genre",
+    subGenreRadio: "↳ Radio genre · tap to preview",
+    subGenreSynth: "↳ Synth genre · tap to preview",
+    musicOn: "🔊 Music", musicOff: "🔇 Music",
+    desc: {
+      strain: {
+        sativa: "Wired and buzzing: you react fast, but everything falls fast too.",
+        indica: "Melted into the couch: drops fall slowly, but you react a beat late.",
+        hybrid: "Not too fast, not too slow. The safest pick for a first run."
+      },
+      audioMode: {
+        radio: "Streams real 24/7 electronic radio stations. Needs internet.",
+        synth: "Music generated live inside the game. Works offline and reacts to the action."
+      },
+      genre: {
+        psytrance: "Fast psychedelic electronic, like sprinting through a tunnel.",
+        cyberpunk: "Dark synthwave, a neon-rain night drive through the city.",
+        indie: "Dreamy, floaty psychedelic indie. Good for chilling.",
+        techno: "Relentless repeating beats from an underground party."
+      },
+      diff: {
+        easy: "3 layers, few eyes and catch assist. Great for a first run.",
+        normal: "All 5 layers + boss. Missing orbs costs HP and combo.",
+        hard: "Faster drops, eyes that chase you and constant vibe drain. Score ×3."
+      },
+      avatar: {
+        dog: "Most agile, but charges the ultimate slower. Ult: shatter every eye.",
+        cat: "Small and hard to hit, but has a smaller catch range. Ult: pull in every orb.",
+        human: "More HP, but moves a bit slower. Ult: 2s shield + a little vibe.",
+        alien: "Fewer eyes spawn, but charges slower. Ult: turn every eye into an orb."
+      },
+      cure: {
+        fresh: "Hits right away: ultimate charges 50% faster.",
+        aged: "Smooth and mellow: take 30% less damage.",
+        quantum: "Instant rush: combo starts at ×4."
+      }
+    },
     step3: "3. Difficulty",
     easy: "🌱 Easy", normal: "🚀 Normal", hard: "💀 Hell",
     step4: "4. Avatar",
     dog: "🐶 Collie", cat: "🐱 Fold Cat", human: "🧑‍🚀 Psychonaut", alien: "👽 Alien",
     avatarStats: {
-      dog:   [['up', 'AGI +30%'], ['down', 'HP -10%']],
+      dog:   [['up', 'AGI +30%'], ['down', 'MP -15%']],
       cat:   [['up', 'Size -25%'], ['down', 'Reach -15%']],
-      human: [['up', 'HP +30%'], ['down', 'AGI -15%']],
+      human: [['up', 'HP +10%'], ['down', 'AGI -15%']],
       alien: [['up', 'Eyes -25%'], ['down', 'MP -20%']]
     },
-    step5: "5. THC: ",
+    step5: "5. How high: ",
+    highStates: ["😌 Tipsy", "😵‍💫 Buzzed", "🌀 Baked", "🛸 Sky-high"],
     thcHint: (m, high) => `Score ×${m}${high ? ' | ⚠️ More sway & eyes' : ''}`,
-    step6: "6. Cure",
+    step6: "6. Aftereffect",
     fresh: "🌱 Fresh", aged: "🏺 Cured", quantum: "🌌 Quantum",
     cureStats: {
       fresh: [['up', 'MP +50%']],
-      aged: [['up', 'DMG -45%']],
+      aged: [['up', 'DMG -30%']],
       quantum: [['up', 'Combo ×4']]
     },
     launch: "🔥 Ignite & Ascend",
@@ -586,6 +705,7 @@ const I18N = {
     pausedText: "Paused · tap ▶ to resume",
     skillCharging: pct => `⚡ ${pct}%`,
     skillReady: "⚡ ULTIMATE!",
+    skillCooldown: s => `⚡ Cooldown ${s}s`,
     happyTrip: "🌈 HAPPY",
     badTrip: "👁️ ×2.5",
     laserWarn: "⚠️ LASER!",
@@ -621,13 +741,21 @@ const I18N = {
     warnContinue: "I understand, continue",
     warnLowFlash: "💡 Continue with reduced flashing",
     stages: [
-      { name: "Layer 1 · Neon Horizon", hint: "Catch the ✨ orbs", hud: (c, m) => `S1 ✨ ${c}/${m}` },
-      { name: "Layer 2 · Sine Ocean", hint: "Orbs snake side to side", hud: (c, m) => `S2 ✨ ${c}/${m}` },
-      { name: "Layer 3 · Gravity Matrix", hint: "Drops drift to the center", hud: (c, m) => `S3 ✨ ${c}/${m}` },
-      { name: "Layer 4 · Mirror Mandala", hint: "Clones catch orbs, but take hits too", hud: (c, m) => `S4 ✨ ${c}/${m}` },
-      { name: "Singularity · The All-Seeing Eye", hint: "Dodge red lasers, grab 🌟", hud: (c, m) => `BOSS ❤️ ${Math.max(0, 100 - c)}%` }
+      { name: "Lift-off · Neon Horizon", short: "Lift-off", hint: "Catch the ✨ orbs" },
+      { name: "Drift · Sine Ocean", short: "Drift", hint: "Orbs snake side to side" },
+      { name: "Fall · Gravity Matrix", short: "Fall", hint: "Drops drift to the center" },
+      { name: "Dissociate · Mirror Mandala", short: "Dissociate", hint: "Clones catch orbs, but take hits too" },
+      { name: "Awaken · The All-Seeing Eye", short: "Awaken", hint: "Dodge red lasers, grab 🌟" }
     ],
-    skills: { dog: "🐶 SONIC BARK!", cat: "🐱 QUANTUM MAGNET!", human: "🧑‍🚀 FULL HEAL + SHIELD!", alien: "👽 EYES TO ORBS!" },
+    skills: { dog: "🐶 SONIC BARK!", cat: "🐱 QUANTUM MAGNET!", human: "🧑‍🚀 2s SHIELD + 12% VIBE!", alien: "👽 EYES TO ORBS!" },
+    introTitle: "The Akashic Ascension",
+    introT1: "Your dreams are locked",
+    introD1: "The megacorp OmniCorp has sealed every dream behind an algorithm.",
+    introT2: "Get lifted, fly up",
+    introD2: "Catch ✨ light, dodge 👁️ eyes, break through layer by layer.",
+    introT3: "Shatter the All-Seeing Eye",
+    introD3: "At the very top, something has been watching you.",
+    introGo: "I'm ready →",
     resDetail: (c, g, d) => `Max combo ${c}x | Grazes ${g} | ${d}`
   }
 };
@@ -691,11 +819,18 @@ function applyTranslations() {
   setT('lblFinalScore', t.finalScoreLbl);
   setT('btnRetry', t.retryBtn);
 
+  setT('introTitle', t.introTitle);
+  setT('introT1', t.introT1); setT('introD1', t.introD1);
+  setT('introT2', t.introT2); setT('introD2', t.introD2);
+  setT('introT3', t.introT3); setT('introD3', t.introD3);
+  setT('introGo', t.introGo);
   setT('warnTitle', t.warnTitle);
   setT('warnBody', t.warnBody);
   setT('warnContinue', t.warnContinue);
   setT('warnLowFlash', t.warnLowFlash);
 
+  refreshAllDescs();
+  refreshMuteLabels();
   updateThcSlider(cfg.thc);
   if (gs.active) {
     refreshSkillButton(true);
@@ -759,21 +894,24 @@ const DIFF = {
     catchR: 60, hitR: 30, assist: 0.10, pityMs: 2800, starPityMs: 3000,
     missCombo: false, missVibe: 0, drain: 0, homing: 0,
     eyeDmg: 12, catchHeal: 5, cbdHeal: 35, targetMult: 1.0, starDmg: 25, scoreMult: 1,
-    laser: { idle: 2400, warn: 1400, dmg: 8, half: 22, beams: 1 }, volleyMs: 3200
+    laser: { idle: 2400, warn: 1400, dmg: 8, half: 22, beams: 1 }, volleyMs: 3200,
+    skillCd: 4000, chargeMult: 1.2
   },
   normal: {
     stages: 5, fall: 1.15, spawn: 0.07, bad: [0.36, 0.4, 0.44, 0.48, 0.42], cbd: 0.06,
     catchR: 46, hitR: 38, assist: 0, pityMs: 5000, starPityMs: 4500,
-    missCombo: true, missVibe: 2, drain: 0.4, homing: 0.9,
-    eyeDmg: 28, catchHeal: 3, cbdHeal: 25, targetMult: 1.4, starDmg: 15, scoreMult: 1,
-    laser: { idle: 1500, warn: 850, dmg: 20, half: 30, beams: 1 }, volleyMs: 2400
+    missCombo: true, missVibe: 2, drain: 0.3, homing: 0.9,
+    eyeDmg: 22, catchHeal: 3, cbdHeal: 25, targetMult: 1.4, starDmg: 15, scoreMult: 1,
+    laser: { idle: 1500, warn: 850, dmg: 20, half: 30, beams: 1 }, volleyMs: 2400,
+    skillCd: 6000, chargeMult: 1.0
   },
   hard: {
     stages: 5, fall: 1.4, spawn: 0.085, bad: [0.4, 0.44, 0.48, 0.52, 0.42], cbd: 0.05,
     catchR: 44, hitR: 38, assist: 0, pityMs: 0, starPityMs: 6000,
-    missCombo: true, missVibe: 2, drain: 0.5, homing: 1.3,
-    eyeDmg: 32, catchHeal: 3, cbdHeal: 20, targetMult: 1.6, starDmg: 12, scoreMult: 3,
-    laser: { idle: 1100, warn: 650, dmg: 24, half: 34, beams: 2 }, volleyMs: 1700
+    missCombo: true, missVibe: 1.5, drain: 0.35, homing: 1.3,
+    eyeDmg: 24, catchHeal: 3, cbdHeal: 20, targetMult: 1.6, starDmg: 12, scoreMult: 3,
+    laser: { idle: 1100, warn: 650, dmg: 24, half: 34, beams: 2 }, volleyMs: 1700,
+    skillCd: 9000, chargeMult: 0.65
   }
 };
 const STRAIN = {
@@ -783,13 +921,13 @@ const STRAIN = {
 };
 const CURE = {
   fresh:   { charge: 1.5, dmg: 1.0,  combo: 1 },
-  aged:    { charge: 1.0, dmg: 0.55, combo: 1 },
+  aged:    { charge: 1.0, dmg: 0.7,  combo: 1 },
   quantum: { charge: 1.0, dmg: 1.0,  combo: 4 }
 };
 const AVATAR = {
-  dog:   { follow: 1.3,  maxVibe: 90,  hit: 1.0,  catchR: 1.0,  bad: 1.0,  charge: 1.0 },
+  dog:   { follow: 1.3,  maxVibe: 100, hit: 1.0,  catchR: 1.0,  bad: 1.0,  charge: 0.85 },
   cat:   { follow: 1.0,  maxVibe: 100, hit: 0.75, catchR: 0.85, bad: 1.0,  charge: 1.0 },
-  human: { follow: 0.85, maxVibe: 130, hit: 1.0,  catchR: 1.0,  bad: 1.0,  charge: 1.0 },
+  human: { follow: 0.85, maxVibe: 110, hit: 1.0,  catchR: 1.0,  bad: 1.0,  charge: 1.0 },
   alien: { follow: 1.0,  maxVibe: 100, hit: 1.0,  catchR: 1.0,  bad: 0.75, charge: 0.8 }
 };
 const AVATAR_ICONS = { dog: "🐶", cat: "🐱", human: "🧑‍🚀", alien: "👽" };
@@ -803,18 +941,34 @@ function markActive(el) {
   Array.from(el.parentElement.children).forEach(c => c.classList.remove('active'));
   el.classList.add('active');
 }
-function setCfg(key, val, el) { cfg[key] = val; markActive(el); }
+// 選項說明：電腦滑過即顯示、手機點選即顯示；離開後回到目前選中的說明
+function showDesc(grp, key) {
+  const d = I18N[curLang].desc[grp];
+  if (d && d[key]) setT(`desc_${grp}`, d[key]);
+}
+function refreshAllDescs() { ['strain', 'audioMode', 'genre', 'diff', 'avatar', 'cure'].forEach(g => showDesc(g, cfg[g])); }
+document.querySelectorAll('[data-grp]').forEach(el => {
+  el.addEventListener('mouseenter', () => showDesc(el.dataset.grp, el.dataset.key));
+  el.addEventListener('mouseleave', () => showDesc(el.dataset.grp, cfg[el.dataset.grp]));
+});
+
+function setCfg(key, val, el) { cfg[key] = val; markActive(el); showDesc(key, val); }
 function setAudioMode(mode, el) {
   cfg.audioMode = mode;
   markActive(el);
+  showDesc('audioMode', mode);
   const t = I18N[curLang];
   setT('lblSubGenre', mode === 'radio' ? t.subGenreRadio : t.subGenreSynth);
 }
-function setGenre(g, el) { cfg.genre = g; currentStationIdx = 0; markActive(el); }
+function setGenre(g, el) {
+  cfg.genre = g; currentStationIdx = 0; markActive(el); showDesc('genre', g);
+  previewGenre();
+}
 
+function highState(v) { return v < 35 ? 0 : (v < 60 ? 1 : (v < 85 ? 2 : 3)); }
 function updateThcSlider(val) {
   cfg.thc = parseInt(val, 10);
-  setT('thcValText', `${val}%`);
+  setT('thcValText', `${I18N[curLang].highStates[highState(cfg.thc)]}・${val}%`);
   const mult = (1 + (val / 45)).toFixed(1);
   const hint = $('thcHint');
   hint.style.color = val < 40 ? "#00f3ff" : (val < 75 ? "#00ff66" : "#ff0055");
@@ -836,6 +990,10 @@ function toggleLowFlash() {
   cfg.lowFlash = !cfg.lowFlash;
   safeStorage.set('cybertrip_lowflash', cfg.lowFlash ? '1' : '0');
   refreshFlashToggle();
+}
+function closeIntro() {
+  safeStorage.set('cybertrip_intro', '1');
+  $('introScreen').style.display = 'none';
 }
 function acceptPhotoWarn(lowFlash) {
   if (lowFlash) { cfg.lowFlash = true; safeStorage.set('cybertrip_lowflash', '1'); }
@@ -876,25 +1034,102 @@ radioEl.addEventListener('error', () => {
   handleRadioFailure(audioSession, 'error', radioAttempt);
 });
 
-function initAudioSystem() {
-  stopAllAudio();
-  const session = audioSession;
+function createAudioGraph() {
   try {
     const AC = window.AudioContext || window.webkitAudioContext;
     audioCtx = AC ? new AC() : null;
   } catch (e) { audioCtx = null; }
-  if (audioCtx) {
-    masterGain = audioCtx.createGain();
-    masterGain.gain.value = isAudioMuted ? 0 : 0.65;
-    delayNode = audioCtx.createDelay();
-    delayNode.delayTime.value = 0.24;
-    const fb = audioCtx.createGain();
-    fb.gain.value = 0.32;
-    delayNode.connect(fb); fb.connect(delayNode);
-    delayNode.connect(masterGain);
-    masterGain.connect(audioCtx.destination);
-    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+  if (!audioCtx) return;
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = isAudioMuted ? 0 : 0.65;
+  delayNode = audioCtx.createDelay();
+  delayNode.delayTime.value = 0.24;
+  const fb = audioCtx.createGain();
+  fb.gain.value = 0.32;
+  delayNode.connect(fb); fb.connect(delayNode);
+  delayNode.connect(masterGain);
+  masterGain.connect(audioCtx.destination);
+  if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+}
+
+// --- 主選單：起飛前的太空氛圍音樂（無鼓、慢速和弦鋪底＋零星閃爍音） ---
+let ambientInterval = null, ambientStep = 0, previewTimer = null, previewing = false;
+const AMBIENT_CHORDS = [
+  [110.00, 164.81, 196.00, 261.63, 329.63],   // Am9
+  [87.31, 130.81, 174.61, 220.00, 329.63],    // Fmaj7
+  [130.81, 196.00, 246.94, 329.63, 392.00],   // Cmaj7
+  [82.41, 123.47, 196.00, 246.94, 293.66]     // Em7
+];
+function playAmbientChord() {
+  if (!audioCtx || !masterGain || gs.active) return;
+  const t = audioCtx.currentTime;
+  const chord = AMBIENT_CHORDS[ambientStep % AMBIENT_CHORDS.length];
+  ambientStep++;
+  const lp = audioCtx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.setValueAtTime(900, t); lp.Q.value = 0.7;
+  lp.connect(masterGain); if (delayNode) lp.connect(delayNode);
+  chord.forEach((f, i) => {
+    [0, 4].forEach(detune => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = i === 0 ? 'sine' : 'triangle';
+      o.frequency.setValueAtTime(f, t); o.detune.setValueAtTime(detune - 2, t);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(i === 0 ? 0.06 : 0.028, t + 1.6);
+      g.gain.linearRampToValueAtTime(0.0001, t + 5.2);
+      o.connect(g); g.connect(lp); o.start(t); o.stop(t + 5.4);
+    });
+  });
+  const sparkle = [659.25, 783.99, 880.00, 987.77, 1318.51];
+  for (let k = 0; k < 2; k++) {
+    if (Math.random() < 0.7) {
+      const st = t + 0.6 + Math.random() * 3;
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(sparkle[Math.floor(Math.random() * sparkle.length)], st);
+      g.gain.setValueAtTime(0.0001, st); g.gain.linearRampToValueAtTime(0.025, st + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, st + 1.4);
+      o.connect(g); g.connect(masterGain); if (delayNode) g.connect(delayNode);
+      o.start(st); o.stop(st + 1.5);
+    }
   }
+}
+function startMenuMusic() {
+  if (gs.active) return;
+  if (!audioCtx) createAudioGraph();
+  if (!audioCtx) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+  if (ambientInterval || previewing) return;
+  playAmbientChord();
+  ambientInterval = setInterval(playAmbientChord, 4000);
+}
+function stopMenuMusic() {
+  if (ambientInterval) { clearInterval(ambientInterval); ambientInterval = null; }
+  if (previewTimer) { clearTimeout(previewTimer); previewTimer = null; }
+  if (previewing && synthInterval) { clearInterval(synthInterval); synthInterval = null; }
+  previewing = false;
+}
+// 主選單點曲風：用合成器試聽 8 秒，結束後回到氛圍音樂
+function previewGenre() {
+  if (gs.active || !audioCtx || isAudioMuted) return;
+  if (ambientInterval) { clearInterval(ambientInterval); ambientInterval = null; }
+  if (previewTimer) clearTimeout(previewTimer);
+  previewing = true;
+  startWebSynthLoop();
+  previewTimer = setTimeout(() => {
+    previewTimer = null;
+    if (synthInterval) { clearInterval(synthInterval); synthInterval = null; }
+    previewing = false;
+    if (!gs.active) startMenuMusic();
+  }, 8000);
+}
+// 瀏覽器規定第一次互動後才能出聲：任何點擊都會嘗試啟動主選單音樂
+document.addEventListener('pointerdown', () => {
+  if (!gs.active) startMenuMusic();
+  else if (audioCtx && audioCtx.state === 'suspended' && !gs.paused) audioCtx.resume().catch(() => {});
+}, true);
+
+function initAudioSystem() {
+  stopAllAudio();
+  const session = audioSession;
+  createAudioGraph();
   radioFailCount = 0; usingSynthFallback = false;
   if (cfg.audioMode === 'radio') { startVisualBeatClock(); playGlobalRadioStream(session); }
   else startSynth(session);
@@ -978,11 +1213,17 @@ function switchRadioChannel() {
   }
 }
 
+function refreshMuteLabels() {
+  const t = I18N[curLang];
+  setT('btnMuteAudio', isAudioMuted ? "🔇" : "🔊");
+  setT('menuMuteBtn', isAudioMuted ? t.musicOff : t.musicOn);
+}
 function toggleMuteAudio() {
   isAudioMuted = !isAudioMuted;
   radioEl.muted = isAudioMuted;
   if (masterGain) masterGain.gain.value = isAudioMuted ? 0 : 0.65;
-  setT('btnMuteAudio', isAudioMuted ? "🔇" : "🔊");
+  refreshMuteLabels();
+  if (!isAudioMuted && !gs.active) startMenuMusic();
 }
 
 function genreBpm() {
@@ -997,7 +1238,8 @@ function startWebSynthLoop() {
   if (synthInterval) clearInterval(synthInterval);
   const stepSec = (60 / genreBpm()) / 4;
   synthInterval = setInterval(() => {
-    if (!gs.active || gs.paused || !audioCtx || !masterGain) return;
+    if (gs.paused || !audioCtx || !masterGain) return;
+    if (!gs.active && !previewing) return;
     const now = audioCtx.currentTime;
     const s = arpStep % 16;
     if (s % 4 === 0) { playKick(now, cfg.genre === 'cyberpunk' ? 115 : 155); beat(); }
@@ -1015,6 +1257,7 @@ function startWebSynthLoop() {
 }
 
 function stopAllAudio() {
+  stopMenuMusic();
   audioSession++; radioAttempt++;
   clearRadioWatchdog();
   if (synthInterval) { clearInterval(synthInterval); synthInterval = null; }
@@ -1066,6 +1309,18 @@ const canvas = $('gameCanvas');
 const ctx = canvas.getContext('2d');
 let width = window.innerWidth, height = window.innerHeight, dpr = 1;
 const layout = { bossY: 115, playerY: window.innerHeight - 100 };
+// 寬版保留：遊玩區就是整個螢幕寬度（超寬螢幕在 1200px 封頂）
+// 難度平衡改用「依寬度縮放」：寬螢幕掉落量按寬度平方根增加、水平機制等比例放大（模擬測試後選定的比例）
+const ARENA_MAX = 1200;
+const REF_W = 400;
+const arena = { x0: 0, w: window.innerWidth, cx: window.innerWidth / 2, k: 1 };
+function computeArena() {
+  arena.w = Math.min(width, ARENA_MAX);
+  arena.x0 = (width - arena.w) / 2;
+  arena.cx = arena.x0 + arena.w / 2;
+  arena.k = Math.max(0.85, arena.w / REF_W);   // 寬度倍率
+}
+const arenaClamp = (x, pad) => clamp(x, arena.x0 + pad, Math.max(arena.x0 + pad, arena.x0 + arena.w - pad));
 
 const gs = {
   active: false, paused: false, inTutorial: false, now: 0,
@@ -1076,7 +1331,7 @@ const gs = {
   lastGoodAt: 0, lastStarAt: 0, lastProgressAt: 0, lastVolleyAt: 0,
   playerX: window.innerWidth / 2, targetX: window.innerWidth / 2,
   trail: [], particles: [], items: [], floatingTexts: [], ripples: [], lasers: [], beatRings: [],
-  bossX: window.innerWidth / 2, bossTheta: 0, bossPhase: 1,
+  bossX: window.innerWidth / 2, bossTheta: 0, bossPhase: 1, skillLockUntil: 0, shieldUntil: 0,
   bossLaser: { state: 'idle', xs: [], since: 0, hitApplied: false }
 };
 const keys = { left: false, right: false };
@@ -1184,18 +1439,19 @@ function resize() {
   canvas.width = Math.round(width * dpr);
   canvas.height = Math.round(height * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  computeArena();
   buildVignette();
   buildStars();
   computeLayout();
-  gs.playerX = clamp(gs.playerX, 40, Math.max(40, width - 40));
-  gs.targetX = clamp(gs.targetX, 40, Math.max(40, width - 40));
+  gs.playerX = arenaClamp(gs.playerX, 35);
+  gs.targetX = arenaClamp(gs.targetX, 35);
   if (gs.active && gs.paused) { ctx.fillStyle = "#05010e"; ctx.fillRect(0, 0, width, height); drawPausedOverlay(); }
 }
 
 // --- 輸入 ---
 function pointerToCanvasX(e) {
   const r = canvas.getBoundingClientRect();
-  return (e.clientX - r.left) * (width / (r.width || width));
+  return arenaClamp((e.clientX - r.left) * (width / (r.width || width)), 35);
 }
 canvas.addEventListener('pointerdown', e => {
   if (!gs.active || gs.paused) return;
@@ -1347,7 +1603,7 @@ function startGame() {
     stageIdx: 0, pendingStage: -1, pendingVictory: false, victoryAt: 0,
     invincibleUntil: 0, hurtUntil: 0, dashUntil: 0, screenShake: 0,
     items: [], particles: [], trail: [], floatingTexts: [], ripples: [], lasers: [], beatRings: [],
-    playerX: width / 2, targetX: width / 2, bossTheta: 0, bossPhase: 1
+    playerX: arena.cx, targetX: arena.cx, bossTheta: 0, bossPhase: 1, skillLockUntil: 0, shieldUntil: 0
   });
   gs.maxCombo = gs.combo;
   keys.left = keys.right = false;
@@ -1408,21 +1664,26 @@ let lastSkillLabel = '';
 function refreshSkillButton(force) {
   const btn = $('skillBtn');
   const t = I18N[curLang];
-  const ready = gs.skillCharge >= 100;
-  const label = ready ? t.skillReady : t.skillCharging(Math.floor(gs.skillCharge));
+  const locked = gs.now < gs.skillLockUntil;
+  const ready = gs.skillCharge >= 100 && !locked;
+  const label = locked ? t.skillCooldown(Math.ceil((gs.skillLockUntil - gs.now) / 1000))
+    : (ready ? t.skillReady : t.skillCharging(Math.floor(gs.skillCharge)));
   if (force || label !== lastSkillLabel) {
     btn.innerText = label; lastSkillLabel = label;
     btn.classList.toggle('ready', ready);
   }
 }
+// 放完大招後進入冷卻；護盾期間零風險，所以不累積能量（修正無限護盾）
 function chargeSkill(amt) {
-  gs.skillCharge = Math.min(100, gs.skillCharge + amt * CURE[cfg.cure].charge * AVATAR[cfg.avatar].charge);
+  if (gs.now < gs.skillLockUntil || gs.now < gs.shieldUntil) return;
+  gs.skillCharge = Math.min(100, gs.skillCharge + amt * CURE[cfg.cure].charge * AVATAR[cfg.avatar].charge * DIFF[cfg.diff].chargeMult);
   refreshSkillButton(false);
 }
 
 function triggerSkill() {
-  if (gs.skillCharge < 100 || !gs.active || gs.paused || gs.inTutorial || gs.victoryAt) return;
+  if (gs.skillCharge < 100 || !gs.active || gs.paused || gs.inTutorial || gs.victoryAt || gs.now < gs.skillLockUntil) return;
   gs.skillCharge = 0;
+  gs.skillLockUntil = gs.now + DIFF[cfg.diff].skillCd;
   refreshSkillButton(true);
   flashScreen("#00f3ff"); shake(14);
   playSFX(440, 1320, 0.3, 'sawtooth');
@@ -1434,7 +1695,9 @@ function triggerSkill() {
   } else if (cfg.avatar === 'cat') {
     gs.items.forEach(it => { if (it.type !== 'bad') { it.x = it.baseX = gs.playerX; it.vx = 0; it.y = layout.playerY - 10; } });
   } else if (cfg.avatar === 'human') {
-    gs.vibe = gs.maxVibe; gs.invincibleUntil = gs.now + 3000;
+    gs.vibe = Math.min(gs.maxVibe, gs.vibe + gs.maxVibe * 0.12);
+    gs.shieldUntil = gs.now + 2000;
+    gs.invincibleUntil = Math.max(gs.invincibleUntil, gs.shieldUntil);
   } else if (cfg.avatar === 'alien') {
     gs.items.forEach(it => { if (it.type === 'bad') { it.type = 'good'; spawnParticles(it.x, it.y, "#ffe600", 10); } });
   }
@@ -1475,8 +1738,12 @@ function renderHUD() {
   hudText('scoreVal', String(Math.floor(gs.score)));
   hudText('comboVal', `x${gs.combo}`);
   hudStyle('vibeBar', 'width', `${Math.round(clamp(gs.vibe / gs.maxVibe, 0, 1) * 100)}%`);
-  hudText('stageTitle', st.hud(Math.min(gs.stageProgress, gs.stageTarget), gs.stageTarget));
-  hudStyle('stageProgBar', 'width', `${Math.min(100, (gs.stageProgress / gs.stageTarget) * 100)}%`);
+  hudText('stageFull', st.name);
+  hudText('stageShort', st.short);
+  const isBossStage = STAGE_META[gs.stageIdx].goalType === 'boss';
+  const pct = Math.min(100, (gs.stageProgress / gs.stageTarget) * 100);
+  hudStyle('stageProgBar', 'width', `${isBossStage ? 100 - pct : pct}%`);
+  const bar = $('stageProgBar'); if (bar) bar.classList.toggle('boss', isBossStage);
   hudText('tripStatus', gs.badTrip ? t.badTrip : t.happyTrip);
   hudStyle('tripStatus', 'color', gs.badTrip ? '#ff0055' : '#00ff66');
 }
@@ -1498,6 +1765,7 @@ function endGame(victory) {
   renderHUD();
 
   $('resultModal').style.display = 'flex';
+  startMenuMusic();
   const title = $('resTitle');
   if (victory) {
     title.innerText = t.winTitle; title.style.color = "#00ff66";
@@ -1510,7 +1778,8 @@ function endGame(victory) {
   }
   setT('resScore', String(finalScore));
   setT('resDetail', t.resDetail(gs.maxCombo, gs.grazeCount, t[cfg.diff]));
-  setT('resSeed', `🧬 CT-${cfg.strain.toUpperCase()}-${cfg.thc}-${cfg.avatar.toUpperCase()}-${cfg.diff.toUpperCase()}`);
+  const moodCode = { sativa: 'HYPE', indica: 'CHILL', hybrid: 'BAL' }[cfg.strain];
+  setT('resSeed', `🧬 CT-${moodCode}-${cfg.thc}-${cfg.avatar.toUpperCase()}-${cfg.diff.toUpperCase()}`);
 }
 
 function quitToMenu() {
@@ -1523,6 +1792,7 @@ function quitToMenu() {
   $('resultModal').style.display = 'none';
   $('mainMenu').style.display = 'flex';
   computeLayout();
+  startMenuMusic();
 }
 
 // ==================== 5. 渲染與物理 ====================
@@ -1691,12 +1961,27 @@ function drawBackgroundAndBoss(now, meta, dt) {
   ctx.shadowBlur = 0;
 }
 
+function drawArenaRails(now) {
+  if (width - arena.w < 24) return;   // 只有超過 1200px 的超寬螢幕才會畫邊界
+  const right = arena.x0 + arena.w;
+  ctx.save();
+  ctx.fillStyle = 'rgba(4, 1, 10, 0.55)';
+  ctx.fillRect(0, 0, arena.x0, height);
+  ctx.fillRect(right, 0, width - right, height);
+  const [h1, h2] = stageColors(now, gs.stageIdx);
+  const g = ctx.createLinearGradient(0, 0, 0, height);
+  g.addColorStop(0, hsl(h1, 60, 0.1)); g.addColorStop(0.5, hsl(h2, 60, 0.75)); g.addColorStop(1, hsl(h1, 60, 0.1));
+  ctx.strokeStyle = g; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(arena.x0, 0); ctx.lineTo(arena.x0, height); ctx.moveTo(right, 0); ctx.lineTo(right, height); ctx.stroke();
+  ctx.restore();
+}
+
 function drawBoss(now, dt, hue) {
   const bossY = layout.bossY;
   const phaseSpeed = [0, 1, 1.45, 1.9][gs.bossPhase];
   const baseSpd = cfg.diff === 'hard' ? 0.0036 : 0.0022;
   gs.bossTheta += baseSpd * phaseSpeed * dt * FRAME_MS;
-  gs.bossX = width / 2 + Math.sin(gs.bossTheta) * (width * 0.3);
+  gs.bossX = arena.cx + Math.sin(gs.bossTheta) * (arena.w * 0.3);
   if (!gs.inTutorial && !gs.victoryAt) drawBossLaser(now, bossY);
 
   let scale = 1, jitterX = 0, jitterY = 0;
@@ -1753,10 +2038,11 @@ function drawBossLaser(now, bossY) {
       // 雷射數量：基本 + 第二階段起 +1，最多 3 道，且一定留安全空隙
       const beams = Math.min(3, L.beams + (gs.bossPhase >= 2 ? 1 : 0));
       bl.xs = [gs.playerX];
-      for (const o of [170, -170, 340, -340]) {
+      const lo = 170 * Math.sqrt(arena.k);
+      for (const o of [lo, -lo, lo * 2, -lo * 2]) {
         if (bl.xs.length >= beams) break;
         const x = gs.playerX + o;
-        if (x > 40 && x < width - 40) bl.xs.push(x);
+        if (x > arena.x0 + 30 && x < arena.x0 + arena.w - 30) bl.xs.push(x);
       }
       playSFX(880, 440, 0.18, 'sine');
     }
@@ -1843,29 +2129,34 @@ function stepAndDraw(dt) {
 
   if (isBoss && live) updateBossPhase(now);
   drawBackgroundAndBoss(now, meta, dt);
+  drawArenaRails(now);
 
+  if (gs.skillLockUntil && now < gs.skillLockUntil + 100) refreshSkillButton(false);
   const kDir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
-  if (kDir) gs.targetX = clamp(gs.targetX + kDir * 15 * dt, 40, width - 40);
+  if (kDir) gs.targetX = arenaClamp(gs.targetX + kDir * 15 * dt, 35);
 
   // --- 生成 ---
-  const fallSpeed = Math.min(14, 5.2 * D.fall * S.fall * (0.9 + cfg.thc / 200) * STAGE_SPEED[gs.stageIdx]);
-  const margin = meta.bgType === 'sine_wave' ? 110 : 60;
-  const randX = () => margin + Math.random() * Math.max(1, width - margin * 2);
-  const nearPlayerX = spread => clamp(gs.playerX + (Math.random() * 2 - 1) * spread, margin, Math.max(margin, width - margin));
+  // 依實際落下距離調整速度，讓不同螢幕高度的反應時間一致
+  const travelScale = clamp((layout.playerY + 35) / 680, 0.8, 1.35);
+  const fallSpeed = Math.min(14, 5.2 * D.fall * S.fall * (0.9 + cfg.thc / 200) * STAGE_SPEED[gs.stageIdx] * travelScale);
+  const margin = Math.min(meta.bgType === 'sine_wave' ? 110 : 55, arena.w * 0.25);
+  const randX = () => arena.x0 + margin + Math.random() * Math.max(1, arena.w - margin * 2);
+  const nearPlayerX = spread => arenaClamp(gs.playerX + (Math.random() * 2 - 1) * spread, margin);
   const spawnY = isBoss ? layout.bossY + 25 : -35;
 
   if (live) {
     const spawnMult = isBoss && gs.bossPhase >= 2 ? 1.25 : 1;
-    if (Math.random() < D.spawn * spawnMult * dt) {
+    if (Math.random() < D.spawn * spawnMult * Math.sqrt(arena.k) * dt) {
       let type = 'good';
       const badP = clamp((D.bad[gs.stageIdx] + (cfg.thc - 50) * 0.002) * A.bad, 0.05, 0.6);
-      if (isBoss && Math.random() < 0.3) type = 'star';
+      if (isBoss && Math.random() < 0.3 / Math.sqrt(arena.k)) type = 'star';   // 星星總量不隨寬度增加，Boss 血量才公平
       else {
         const r = Math.random();
         if (r < badP) type = 'bad';
         else if (r > 1 - D.cbd) type = 'cbd';
       }
-      spawnItem(type, randX(), spawnY, fallSpeed);
+      // 星星出現在玩家附近 260px 內：寬螢幕不會因為星星掉在遠處而讓 Boss 戰拖長
+      spawnItem(type, type === 'star' ? nearPlayerX(260) : randX(), spawnY, fallSpeed);
     }
     if (!isBoss) {
       if (D.pityMs && now - gs.lastGoodAt > D.pityMs && !gs.items.some(it => it.type === 'good' && it.y < playerY - 120)) {
@@ -1895,13 +2186,14 @@ function stepAndDraw(dt) {
   // --- 玩家 ---
   const sway = Math.sin(now * 0.005) * (cfg.thc * 0.18) * (gs.stageIdx === 0 ? 0.5 : 1);
   let desiredX = gs.targetX + sway;
-  if (meta.bgType === 'hex_tunnel') desiredX += (width / 2 - gs.targetX) * 0.06;
+  if (meta.bgType === 'hex_tunnel') desiredX += (arena.cx - gs.targetX) * 0.06;
   const follow = now < gs.dashUntil ? 0.38 : Math.min(0.35, S.follow * A.follow);
   gs.playerX += (desiredX - gs.playerX) * (1 - Math.pow(1 - follow, dt));
-  gs.playerX = clamp(gs.playerX, 35, Math.max(35, width - 35));
+  gs.playerX = arenaClamp(gs.playerX, 35);
 
-  const cloneOffsets = meta.bgType === 'mandala' ? [0, -105, 105] : [0];
-  const catchers = cloneOffsets.map(o => clamp(gs.playerX + o, 20, Math.max(20, width - 20)));
+  const cloneGap = 105 * Math.min(arena.k, 2.6);   // 寬螢幕分身拉開，覆蓋範圍等比例
+  const cloneOffsets = meta.bgType === 'mandala' ? [0, -cloneGap, cloneGap] : [0];
+  const catchers = cloneOffsets.map(o => arenaClamp(gs.playerX + o, 20));
   const catchR = D.catchR * A.catchR;
   const hitR = D.hitR * A.hit;
   const grazeR = hitR + 50;
@@ -1934,16 +2226,17 @@ function stepAndDraw(dt) {
         }
       }
     }
-    if (it.type === 'bad' && D.homing && !it.volley && it.y < playerY - 80) {
+    // 魔眼只追蹤附近（220px 內）的玩家：寬螢幕不會讓整排魔眼一起往你身上聚
+    if (it.type === 'bad' && D.homing && !it.volley && it.y < playerY - 80 && Math.abs(gs.playerX - it.x) < 220) {
       const dx = gs.playerX - it.x;
       const step = Math.sign(dx) * Math.min(Math.abs(dx), D.homing * dt);
       if (meta.bgType === 'sine_wave') it.baseX += step; else it.x += step;
     }
     if (meta.bgType === 'sine_wave') {
-      const amp = 70 * (1 - 0.45 * clamp(it.y / playerY, 0, 1));
+      const amp = 70 * Math.pow(arena.k, 0.3) * (1 - 0.45 * clamp(it.y / playerY, 0, 1));
       it.x = it.baseX + Math.sin(it.y * 0.022 + it.phase) * amp;
     } else if (meta.bgType === 'hex_tunnel') {
-      it.x += (width / 2 - it.x) * (1 - Math.pow(1 - 0.0025, dt));
+      it.x += (arena.cx - it.x) * (1 - Math.pow(1 - 0.0025, dt));
     }
 
     drawSprite(getItemSprite(it.bonus ? 'bonus' : it.type), it.x, it.y);
@@ -1952,7 +2245,8 @@ function stepAndDraw(dt) {
       let caught = false;
       for (const cxp of catchers) { if (Math.hypot(it.x - cxp, it.y - playerY) < catchR) { caught = true; break; } }
       if (caught) { handleCatch(it, meta, thcMult); gs.items.splice(i, 1); continue; }
-      if (it.type === 'good' && !it.missed && it.y > playerY + 45 && live) {
+      // 漏接只算「本來接得到」的光球（經過時離本體約 2 倍接球範圍內），螢幕寬窄不再影響懲罰次數
+      if (it.type === 'good' && !it.missed && it.y > playerY + 45 && live && Math.abs(gs.playerX - it.x) < catchR * 2.2) {
         it.missed = true;
         if (D.missCombo && gs.combo > 1) { gs.combo = 1; addFloatText(I18N[curLang].miss, it.x, playerY + 10, "#aaaaaa", 14); }
         if (D.missVibe) gs.vibe -= D.missVibe;
@@ -1974,7 +2268,7 @@ function stepAndDraw(dt) {
       }
       const distMain = Math.hypot(it.x - gs.playerX, it.y - playerY);
       if (distMain < grazeR) it.nearMiss = true;
-      if (it.nearMiss && !it.grazed && it.y > playerY + 36) {
+      if (it.nearMiss && !it.grazed && it.y > playerY + 36 && now >= gs.invincibleUntil) {
         it.grazed = true; gs.grazeCount++;
         const gPts = Math.round(500 * gs.combo * (gs.badTrip ? 2.5 : 1) * D.scoreMult);
         gs.score += gPts; chargeSkill(28); spawnParticles(it.x, it.y, "#ffe600", 7);
@@ -1983,7 +2277,7 @@ function stepAndDraw(dt) {
         markHUD();
       }
     }
-    if (it.y > height + 50 || it.x < -60 || it.x > width + 60) gs.items.splice(i, 1);
+    if (it.y > height + 50 || it.x < arena.x0 - 60 || it.x > arena.x0 + arena.w + 60) gs.items.splice(i, 1);
   }
 
   for (let i = gs.particles.length - 1; i >= 0; i--) {
@@ -2114,6 +2408,7 @@ function drawPausedOverlay() {
 window.addEventListener('resize', resize);
 resize();
 applyTranslations();
+if (safeStorage.get('cybertrip_intro', '0') !== '1') $('introScreen').style.display = 'flex';
 if (safeStorage.get('cybertrip_photo', '0') !== '1') $('photoWarn').style.display = 'flex';
 </script>
 </body>
